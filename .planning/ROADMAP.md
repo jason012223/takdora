@@ -33,7 +33,12 @@ Takdora will grow from a deployable Reflex foundation into a configurable, tenan
   2. An operator can build and deploy the application with its migrations and static assets using the documented runtime configuration.
   3. An operator can run automated linting and tests before deployment and receive a clear pass/fail result.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Build the Reflex/PostgreSQL foundation and Docker Compose development workflow.
+- [ ] 01-02-PLAN.md — Add lint, tests, coverage, dependency audit, and Playwright CI gates.
+- [ ] 01-03-PLAN.md — Package the Render deployment, health monitoring, Sentry, and operator runbook.
 
 ### Phase 01.1: Reflex UI Foundation and Design System (INSERTED)
 
