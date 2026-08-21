@@ -57,6 +57,7 @@ The v1 workflow is deliberately practical: a customer visits a business's public
 | PDF invoices with manual paid status in v1 | Delivers invoicing value without payment-gateway complexity. | — Pending |
 | Customer changes handled by business owners in v1 | Keeps booking changes controlled and initial scope manageable. | — Pending |
 | Customer booking confirmations are emailed | Gives customers a clear record after booking. | — Pending |
+| Reflex with its Radix-based components | Keeps the app full-stack Python while providing an accessible component foundation for the public and owner experiences. | — Pending |
 
 ## Evolution
 

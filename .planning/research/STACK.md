@@ -6,6 +6,8 @@
 
 ## Recommendation
 
+> **Superseded decision — 2026-08-22:** The Django/HTMX/Bootstrap recommendation below was the initial stack research. Takdora will instead use **Reflex** as its full-stack Python framework and UI foundation. Reflex compiles the UI to React, retains state and application logic in Python, and many of its core components are based on Radix. The new Phase 01.1 will define the exact component, data, authentication, and deployment conventions before feature implementation. Keep the PostgreSQL, object storage, transactional email, exact-money, tenant-isolation, PDF, testing, and monitoring guidance as candidate inputs; revalidate Django-specific packages before use.
+
 Build Takdora as a **Django 6.1 server-rendered monolith** with PostgreSQL. Use Django templates plus HTMX for selective interactive updates, not a separate React/Next frontend or a public REST API in v1. This product is form- and workflow-heavy (business setup, availability, bookings, invoices) and Django provides its ORM, authentication, CSRF protection, form validation, migrations, and admin in the same deployable application.
 
 Run the public app in a Docker image on a paid, always-on Render web service with managed Render Postgres. Store generated invoice PDFs and business logos in S3-compatible object storage. Use Resend for transaction email. Introduce a Celery worker and Redis only when outbound email/retry/reminder jobs require it; a v1 booking confirmation can be sent synchronously after the booking transaction is safely committed.
