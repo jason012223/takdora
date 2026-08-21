@@ -1,0 +1,1 @@
+{"content":"Booking race-condition sources agree the availability decision and write must be atomically enforced at the database boundary.","source":"web","provider":"brave","confidence":"LOW","fetched_at":"2026-08-21T16:44:18.516Z","ttl":86400000,"kind":"web"}

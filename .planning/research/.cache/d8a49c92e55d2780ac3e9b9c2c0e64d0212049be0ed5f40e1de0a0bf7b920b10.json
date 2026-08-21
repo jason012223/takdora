@@ -1,0 +1,1 @@
+{"content":"OWASP says multi-tenant systems should validate tenant ownership in the data-access layer and use database isolation as defense in depth. Authorization regression tests should cover IDOR and tenant-isolation failures.","source":"web","provider":"brave","confidence":"MEDIUM","fetched_at":"2026-08-21T16:47:15.795Z","ttl":86400000,"kind":"web"}
