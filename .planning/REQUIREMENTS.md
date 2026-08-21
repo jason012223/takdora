@@ -106,13 +106,51 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TBD | TBD | Pending |
+| FOUND-01 | Phase 8 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| TEN-01 | Phase 2 | Pending |
+| TEN-02 | Phase 2 | Pending |
+| BIZ-01 | Phase 2 | Pending |
+| BIZ-02 | Phase 2 | Pending |
+| BIZ-03 | Phase 2 | Pending |
+| BIZ-04 | Phase 2 | Pending |
+| SERV-01 | Phase 3 | Pending |
+| AVAIL-01 | Phase 3 | Pending |
+| AVAIL-02 | Phase 3 | Pending |
+| AVAIL-03 | Phase 3 | Pending |
+| BOOK-01 | Phase 4 | Pending |
+| BOOK-02 | Phase 4 | Pending |
+| BOOK-03 | Phase 4 | Pending |
+| BOOK-04 | Phase 4 | Pending |
+| BOOK-05 | Phase 4 | Pending |
+| BOOK-06 | Phase 4 | Pending |
+| NOTF-01 | Phase 4 | Pending |
+| OPS-01 | Phase 5 | Pending |
+| OPS-02 | Phase 5 | Pending |
+| OPS-03 | Phase 5 | Pending |
+| OPS-04 | Phase 5 | Pending |
+| INV-01 | Phase 6 | Pending |
+| INV-02 | Phase 6 | Pending |
+| INV-03 | Phase 6 | Pending |
+| INV-04 | Phase 6 | Pending |
+| INV-05 | Phase 6 | Pending |
+| INV-06 | Phase 6 | Pending |
+| INV-07 | Phase 6 | Pending |
+| INV-08 | Phase 6 | Pending |
+| REL-01 | Phase 7 | Pending |
+| REL-02 | Phase 7 | Pending |
+| REL-03 | Phase 7 | Pending |
+| REL-04 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 39 total
-- Mapped to phases: 0
-- Unmapped: 39
+- Mapped to phases: 39
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-22*
-*Last updated: 2026-08-22 after initial definition*
+*Last updated: 2026-08-22 after roadmap creation*
