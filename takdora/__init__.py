@@ -1,0 +1,1 @@
+"""Takdora application package."""
