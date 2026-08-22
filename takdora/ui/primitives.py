@@ -159,3 +159,48 @@ def data_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> rx.Comp
         overflow_x="auto",
         width="100%",
     )
+
+
+def confirmation_dialog(title: str, description: str, confirm_label: str) -> rx.Component:
+    """A labelled Radix dialog suitable for future confirmation actions."""
+    return rx.dialog.root(
+        rx.dialog.trigger(rx.button("Open sample confirmation", variant="soft")),
+        rx.dialog.content(
+            rx.dialog.title(title),
+            rx.dialog.description(description),
+            rx.flex(
+                rx.dialog.close(rx.button("Cancel", variant="soft")),
+                rx.dialog.close(rx.button(confirm_label, color_scheme="red")),
+                spacing="3",
+                justify="end",
+            ),
+            max_width="28rem",
+        ),
+    )
+
+
+def availability_calendar(slots: Sequence[tuple[str, str]]) -> rx.Component:
+    """Privacy-safe availability list: it deliberately excludes customer identity."""
+    return rx.card(
+        rx.vstack(
+            rx.heading("Sample availability", size="4"),
+            rx.text(
+                "Synthetic slots only. Customer details are never shown here.",
+                size="2",
+                color=TOKENS["muted"],
+            ),
+            *[
+                rx.hstack(
+                    rx.text(label),
+                    status_badge(status, tone="success" if status == "Available" else "neutral"),
+                    justify="between",
+                    width="100%",
+                )
+                for label, status in slots
+            ],
+            rx.text("No additional sample slots are available.", size="2", color=TOKENS["muted"]),
+            spacing="3",
+            width="100%",
+        ),
+        width="100%",
+    )
