@@ -192,7 +192,13 @@ Plans:
   2. A portfolio reviewer can access a clear deployed demonstration of the booking-to-invoice workflow and understand the supported v1 boundaries.
   3. A service-business owner can follow the setup and booking flow using understandable copy, empty states, and error feedback.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+- [ ] 08-01-PLAN.md — Build the truthful multi-page marketing site with registration as its primary action.
+- [ ] 08-02-PLAN.md — Create the labelled, resettable synthetic portfolio demo workspace and workflow.
+- [ ] 08-03-PLAN.md — Prove responsive release readiness and package reproducible portfolio evidence.
 **UI hint**: yes
 
 ## Progress
