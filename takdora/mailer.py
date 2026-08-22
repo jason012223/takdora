@@ -73,6 +73,9 @@ class Mailer:
             )
         )
 
+    def send_booking_confirmation(self, recipient: str, subject: str, body: str) -> None:
+        self._send(OutgoingMessage(recipient, subject, body))
+
 
 @dataclass
 class InMemoryMailer:
@@ -99,3 +102,6 @@ class InMemoryMailer:
                 recipient, "Reset your Takdora password", f"Reset password: {reset_url}"
             )
         )
+
+    def send_booking_confirmation(self, recipient: str, subject: str, body: str) -> None:
+        self._send(OutgoingMessage(recipient, subject, body))

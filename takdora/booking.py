@@ -15,6 +15,7 @@ from takdora.auth import AuthenticationError, normalize_email
 from takdora.availability import OccupiedInterval, calculate_slots
 from takdora.models import (
     Booking,
+    BookingConfirmationOutbox,
     BookingRules,
     Business,
     BusinessService,
@@ -161,6 +162,14 @@ def create_public_booking(request: BookingRequest) -> BookingResult:
                 idempotency_key=key,
             )
             session.add(booking)
+            session.flush()
+            session.add(
+                BookingConfirmationOutbox(
+                    business_id=business.id or 0,
+                    booking_id=booking.id or 0,
+                    recipient_email=booking.customer_email,
+                )
+            )
             session.commit()
             session.refresh(booking)
             return BookingResult("booked", booking_id=booking.id, message="Booking confirmed.")
