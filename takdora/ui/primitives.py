@@ -180,25 +180,32 @@ def confirmation_dialog(title: str, description: str, confirm_label: str) -> rx.
 
 
 def availability_calendar(slots: Sequence[tuple[str, str]]) -> rx.Component:
-    """Privacy-safe availability list: it deliberately excludes customer identity."""
+    """Privacy-safe availability projection: it deliberately excludes customer identity."""
     return rx.card(
         rx.vstack(
-            rx.heading("Sample availability", size="4"),
+            rx.heading("Availability", size="4"),
             rx.text(
-                "Synthetic slots only. Customer details are never shown here.",
+                "Available, blocked, and booked periods never include customer details.",
                 size="2",
                 color=TOKENS["muted"],
             ),
             *[
                 rx.hstack(
                     rx.text(label),
-                    status_badge(status, tone="success" if status == "Available" else "neutral"),
+                    status_badge(
+                        status,
+                        tone="success"
+                        if status == "Available"
+                        else "warning"
+                        if status == "Blocked"
+                        else "neutral",
+                    ),
                     justify="between",
                     width="100%",
                 )
                 for label, status in slots
             ],
-            rx.text("No additional sample slots are available.", size="2", color=TOKENS["muted"]),
+            rx.text("No additional times are available.", size="2", color=TOKENS["muted"]),
             spacing="3",
             width="100%",
         ),
