@@ -44,9 +44,28 @@ def onboarding_page() -> rx.Component:
         rx.button("Save essentials", on_click=OnboardingState.save_essentials),
         rx.cond(OnboardingState.setup_message != "", feedback(OnboardingState.setup_message)),
         rx.divider(),
-        rx.heading("Review before publishing", size="5"),
-        rx.text("Your future public address will be takdora.app/b/"),
-        rx.text(OnboardingState.slug),
-        rx.text("Required before publishing: verified email, a service, and working hours."),
-        rx.text("Optional polish: invoice identity, contact details, logo, and color."),
+        rx.card(
+            rx.vstack(
+                rx.heading("Then finish your booking setup", size="5"),
+                rx.text("Your public address will be takdora.app/b/"),
+                rx.text(OnboardingState.slug, weight="bold"),
+                rx.text(
+                    "Next, add one service and your working hours. "
+                    "The dashboard will show when you are ready to publish."
+                ),
+                rx.hstack(
+                    rx.link("Add a service", href="/owner/services", weight="bold"),
+                    rx.link("Set working hours", href="/owner/availability", weight="bold"),
+                    rx.link("Review readiness", href="/owner", weight="bold"),
+                    spacing="4",
+                    flex_wrap="wrap",
+                ),
+                rx.text(
+                    "Optional later: invoice identity, contact details, logo, and color.", size="2"
+                ),
+                spacing="3",
+                width="100%",
+            ),
+            width="100%",
+        ),
     )

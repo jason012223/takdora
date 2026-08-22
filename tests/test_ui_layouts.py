@@ -12,6 +12,10 @@ def test_layouts_expose_labelled_navigation_and_mobile_menu() -> None:
     assert "Owner navigation" in source
     assert "Marketing navigation" in source
     assert 'display={"base": "inline-flex", "md": "none"}' in source
+    assert '("Dashboard", "/owner")' in source
+    assert '("Setup", "/owner/setup")' in source
+    assert 'aria_current="page"' in source
+    assert "Skip to workspace content" in source
 
 
 def test_preview_composes_shared_workflow_without_private_data() -> None:
