@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import reflex as rx
 from sqlmodel import select
 
+from takdora.delivery import process_due_deliveries
 from takdora.models import Business
 
 
@@ -29,3 +30,4 @@ def purge_due_workspaces(now: datetime | None = None) -> int:
 
 if __name__ == "__main__":
     purge_due_workspaces()
+    process_due_deliveries()

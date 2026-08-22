@@ -183,6 +183,8 @@ class BookingConfirmationOutbox(rx.Model, table=True):
     delivery_status: str = Field(default="pending", index=True)
     attempts: int = Field(default=0)
     last_error: str | None = Field(default=None, max_length=240)
+    next_attempt_at: datetime | None = Field(default=None, index=True)
+    terminal_at: datetime | None = Field(default=None)
     sent_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -216,6 +218,8 @@ class BookingChangeOutbox(rx.Model, table=True):
     delivery_status: str = Field(default="pending", index=True)
     attempts: int = Field(default=0)
     last_error: str | None = Field(default=None, max_length=240)
+    next_attempt_at: datetime | None = Field(default=None, index=True)
+    terminal_at: datetime | None = Field(default=None)
     sent_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -282,14 +286,17 @@ class InvoiceSequence(rx.Model, table=True):
 
 
 class InvoiceDocument(rx.Model, table=True):
-    """Server-held immutable PDF bytes; there is deliberately no public URL."""
+    """Immutable PDF metadata; legacy inline bytes remain only during storage migration."""
 
     __table_args__ = (UniqueConstraint("invoice_id", name="uq_invoice_document"),)
 
     invoice_id: int = Field(foreign_key="invoice.id", index=True)
-    content: bytes
+    content: bytes | None = Field(default=None)
     content_type: str = Field(default="application/pdf", max_length=80)
     filename: str = Field(max_length=180)
+    storage_key: str | None = Field(default=None, unique=True, index=True, max_length=320)
+    byte_size: int | None = Field(default=None)
+    checksum_sha256: str | None = Field(default=None, max_length=64)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -305,6 +312,8 @@ class InvoiceEmailOutbox(rx.Model, table=True):
     delivery_status: str = Field(default="pending", index=True)
     attempts: int = Field(default=0)
     last_error: str | None = Field(default=None, max_length=240)
+    next_attempt_at: datetime | None = Field(default=None, index=True)
+    terminal_at: datetime | None = Field(default=None)
     sent_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
