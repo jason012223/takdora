@@ -7,6 +7,7 @@ import pytest
 from takdora.business_setup import (
     BusinessProfileInput,
     default_branding,
+    evaluate_publish_readiness,
     normalize_slug,
     validate_profile,
 )
@@ -31,3 +32,15 @@ def test_slug_is_editable_but_normalized_for_public_urls(value: str) -> None:
 def test_invalid_public_slug_is_rejected(value: str) -> None:
     with pytest.raises(ValueError):
         normalize_slug(value)
+
+
+def test_publish_readiness_names_each_missing_prerequisite() -> None:
+    readiness = evaluate_publish_readiness(
+        email_verified=False,
+        business_name="Luna Studio",
+        slug="luna-studio",
+        has_active_service=False,
+        has_working_hours=False,
+    )
+    assert readiness.ready is False
+    assert readiness.missing_required == ("Verify email", "Add a service", "Set working hours")
