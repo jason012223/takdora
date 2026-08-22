@@ -12,7 +12,9 @@ from urllib.parse import urlencode, urlsplit
 import reflex as rx
 from sqlmodel import select
 
-from takdora.models import AuthSession, OwnerAccount, PasswordResetToken
+from takdora.config import get_settings
+from takdora.mailer import MailDeliveryError, Mailer
+from takdora.models import AuthSession, EmailVerificationToken, OwnerAccount, PasswordResetToken
 
 MIN_PASSWORD_LENGTH = 12
 SESSION_TTL = timedelta(days=14)
@@ -128,6 +130,53 @@ def issue_password_reset(owner_id: int) -> str:
         )
         session.commit()
     return raw_token
+
+
+def issue_email_verification(owner_id: int) -> str:
+    """Persist one 30-minute verification credential after the owner account commit."""
+    raw_token, token_digest = create_one_time_token()
+    with rx.session() as session:
+        session.add(
+            EmailVerificationToken(
+                owner_id=owner_id,
+                token_digest=token_digest,
+                expires_at=datetime.now(UTC) + RESET_TTL,
+            )
+        )
+        session.commit()
+    return raw_token
+
+
+def send_verification_email(owner: OwnerAccount, *, mailer: Mailer | None = None) -> None:
+    """Send an email-verification link only after its token has committed."""
+    raw_token = issue_email_verification(owner.id or 0)
+    settings = get_settings()
+    sender = mailer or Mailer(settings)
+    sender.send_verification(
+        owner.normalized_email,
+        build_public_token_url(settings.public_app_origin, "/verify-email", raw_token),
+    )
+
+
+def request_password_reset(email: str, *, mailer: Mailer | None = None) -> None:
+    """Request reset mail without disclosing whether the account exists."""
+    try:
+        normalized_email = normalize_email(email)
+    except AuthenticationError:
+        return
+    with rx.session() as session:
+        owner = session.exec(
+            select(OwnerAccount).where(OwnerAccount.normalized_email == normalized_email)
+        ).first()
+    if owner is None:
+        return
+    raw_token = issue_password_reset(owner.id or 0)
+    settings = get_settings()
+    sender = mailer or Mailer(settings)
+    sender.send_password_reset(
+        owner.normalized_email,
+        build_public_token_url(settings.public_app_origin, "/reset-password", raw_token),
+    )
 
 
 def consume_password_reset(raw_token: str, new_password: str) -> bool:
@@ -278,6 +327,7 @@ class AuthState(rx.State):
     session_credential: str = rx.Cookie(name="takdora_session", path="/", max_age=1209600)
     email: str = ""
     password: str = ""
+    reset_token: str = ""
     feedback_message: str = ""
 
     @property
@@ -320,3 +370,26 @@ class AuthState(rx.State):
         self.session_credential = ""
         self.feedback_message = ""
         return rx.redirect("/sign-in")
+
+    def request_reset(self) -> None:
+        """Keep the response neutral so this event cannot enumerate accounts."""
+        try:
+            request_password_reset(self.email)
+        except MailDeliveryError:
+            self.feedback_message = "We could not send that email yet. Please try again shortly."
+        else:
+            self.feedback_message = "If an account exists, we sent reset instructions."
+
+    def reset_password(self) -> rx.event.EventSpec | None:
+        if consume_password_reset(self.reset_token, self.password):
+            self.password = ""
+            self.reset_token = ""
+            return rx.redirect("/sign-in")
+        self.feedback_message = "That reset link is invalid or has expired. Request a new one."
+        return None
+
+    def capture_reset_token(self) -> None:
+        """Read the browser URL token only to submit it to the server-side consumer."""
+        query = self.router_data.get("query", {})
+        token = query.get("token", "") if isinstance(query, dict) else ""
+        self.reset_token = token if isinstance(token, str) else ""

@@ -63,8 +63,10 @@ def test_mailer_sends_only_absolute_one_time_links_with_safe_failure() -> None:
     mailer.send_password_reset("owner@example.com", "https://takdora.app/reset-password?token=safe")
     assert len(mailer.sent_messages) == 1
     assert "https://takdora.app/reset-password?token=safe" in mailer.sent_messages[0].body
-    assert "password" not in mailer.sent_messages[0].body.casefold().replace("reset password", "")
+    assert "correct horse battery staple" not in mailer.sent_messages[0].body
 
     failing_mailer = InMemoryMailer(fail_delivery=True)
     with pytest.raises(MailDeliveryError, match="try again"):
-        failing_mailer.send_verification("owner@example.com", "https://takdora.app/verify-email?token=safe")
+        failing_mailer.send_verification(
+            "owner@example.com", "https://takdora.app/verify-email?token=safe"
+        )

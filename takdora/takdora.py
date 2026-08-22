@@ -10,9 +10,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
+from takdora.auth import AuthState
 from takdora.config import get_settings
 from takdora.models import record_probe
-from takdora.pages.auth import register_page, sign_in_page
+from takdora.pages.auth import register_page, request_reset_page, reset_password_page, sign_in_page
 from takdora.pages.design_system import design_system
 from takdora.pages.ui_preview import ui_preview
 from takdora.ui.shell import application_shell
@@ -78,3 +79,10 @@ app.add_page(design_system, route="/design-system", title="Takdora interface pat
 app.add_page(ui_preview, route="/ui-preview", title="Takdora responsive UI preview")
 app.add_page(register_page, route="/register", title="Create your Takdora account")
 app.add_page(sign_in_page, route="/sign-in", title="Sign in to Takdora")
+app.add_page(request_reset_page, route="/request-reset", title="Reset your Takdora password")
+app.add_page(
+    reset_password_page,
+    route="/reset-password",
+    title="Choose a new Takdora password",
+    on_load=AuthState.capture_reset_token,
+)
