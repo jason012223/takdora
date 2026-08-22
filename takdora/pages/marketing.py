@@ -34,7 +34,8 @@ def home_page() -> rx.Component:
             rx.badge("For Philippine service businesses", color_scheme="orange", variant="soft"),
             rx.heading("Booking and invoicing, in one clear place.", size="9"),
             rx.text(
-                "Takdora is a configurable booking and invoice hub for Philippine service businesses. "
+                "Takdora is a configurable booking and invoice hub for "
+                "Philippine service businesses.\n"
                 "Take bookings, manage appointments, and issue invoices without losing the thread.",
                 size="4",
                 color=TOKENS["muted"],
@@ -96,11 +97,13 @@ def help_page() -> rx.Component:
         rx.vstack(
             rx.heading("Owners", size="5"),
             rx.text(
-                "Create your account, set up your business, add a service, then publish your booking page."
+                "Create your account, set up your business, add a service, then publish "
+                "your booking page."
             ),
             rx.heading("Customers", size="5"),
             rx.text(
-                "Choose a service and an available time. For changes or questions, contact the business directly."
+                "Choose a service and an available time. For changes or questions, "
+                "contact the business directly."
             ),
             rx.heading("Payments and invoices", size="5"),
             rx.text(f"{MANUAL_PAYMENT_BOUNDARY} {INVOICE_BOUNDARY}"),
@@ -116,8 +119,8 @@ def portfolio_page() -> rx.Component:
         rx.heading("Explore the real product flow", size="8"),
         rx.vstack(
             rx.text(
-                "Portfolio reviewers can inspect a synthetic business through public booking, owner booking "
-                "operations, an issued invoice, and manually tracked payment state."
+                "Portfolio reviewers can inspect a synthetic business through public booking, "
+                "owner booking operations, an issued invoice, and manually tracked payment state."
             ),
             rx.callout(SYNTHETIC_DEMO_NOTICE, icon="info", color_scheme="orange"),
             rx.text("The demo is resettable and does not send messages to visitors."),
