@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import secrets
 from datetime import date
 
 import reflex as rx
 
+from takdora.booking import BookingRequest, create_public_booking
+from takdora.booking_notifications import dispatch_confirmation
 from takdora.public_booking import (
     PublicBookingUnavailable,
     format_slot_for_timezone,
@@ -32,6 +35,13 @@ class PublicBookingState(rx.State):
     customer_note: str = ""
     honeypot: str = ""
     booking_message: str = ""
+    idempotency_key: str = ""
+    booking_complete: bool = False
+    confirmed_service: str = ""
+    confirmed_time: str = ""
+    email_delivery: str = ""
+    name_error: str = ""
+    email_error: str = ""
 
     def load_public_page(self) -> rx.event.EventSpec | None:
         result = resolve_public_business(self.business_slug)
@@ -50,6 +60,8 @@ class PublicBookingState(rx.State):
         ]
         if self.services and not self.selected_service_id:
             self.selected_service_id = self.services[0]
+        if not self.idempotency_key:
+            self.idempotency_key = secrets.token_urlsafe(32)
         return rx.call_script(
             "window.takdoraPublicBookingTimezone && window.takdoraPublicBookingTimezone()",
             callback=PublicBookingState.set_browser_timezone,
@@ -84,6 +96,48 @@ class PublicBookingState(rx.State):
             if self.slots
             else "No times are available for that day."
         )
+
+    def submit_booking(self) -> None:
+        self.name_error = ""
+        self.email_error = ""
+        if not self.customer_name.strip():
+            self.name_error = "Enter your name."
+        if "@" not in self.customer_email or not self.customer_email.strip():
+            self.email_error = "Enter a valid email address."
+        if self.name_error or self.email_error:
+            self.booking_message = "Check the highlighted details and try again."
+            return
+        if not self.selected_slot or not self.selected_service_id:
+            self.booking_message = "Choose a service and available time."
+            return
+        result = create_public_booking(
+            BookingRequest(
+                slug=self.business_slug,
+                service_id=self.selected_service_id.split(":", maxsplit=1)[0],
+                slot_start_utc=self.selected_slot.split(" | ", maxsplit=1)[0],
+                idempotency_key=self.idempotency_key,
+                customer_name=self.customer_name,
+                customer_email=self.customer_email,
+                customer_phone=self.customer_phone,
+                customer_note=self.customer_note,
+                browser_timezone=self.browser_timezone,
+                honeypot=self.honeypot,
+            )
+        )
+        if result.outcome == "slot_taken":
+            self.selected_slot = ""
+            self.idempotency_key = secrets.token_urlsafe(32)
+            self.booking_message = "That time was just taken. Choose another available time."
+            self.load_slots()
+            return
+        if result.outcome != "booked" or result.booking_id is None:
+            self.booking_message = result.message
+            return
+        self.booking_complete = True
+        self.confirmed_service = self.selected_service_id.split(": ", maxsplit=1)[-1]
+        self.confirmed_time = self.selected_slot.split(" | ", maxsplit=1)[-1]
+        self.email_delivery = dispatch_confirmation(result.booking_id)
+        self.booking_message = "Booking confirmed."
 
 
 def public_booking_page() -> rx.Component:
@@ -123,6 +177,10 @@ def public_booking_page() -> rx.Component:
                         on_change=PublicBookingState.set_customer_name,
                         required=True,
                     ),
+                    rx.cond(
+                        PublicBookingState.name_error != "",
+                        rx.text(PublicBookingState.name_error, color="red", role="alert"),
+                    ),
                     rx.el.label("Email address", html_for="customer-email"),
                     rx.input(
                         id="customer-email",
@@ -130,6 +188,10 @@ def public_booking_page() -> rx.Component:
                         value=PublicBookingState.customer_email,
                         on_change=PublicBookingState.set_customer_email,
                         required=True,
+                    ),
+                    rx.cond(
+                        PublicBookingState.email_error != "",
+                        rx.text(PublicBookingState.email_error, color="red", role="alert"),
                     ),
                     rx.el.label("Phone number (optional)", html_for="customer-phone"),
                     rx.input(
@@ -164,6 +226,26 @@ def public_booking_page() -> rx.Component:
                     width="100%",
                 ),
                 id="public-booking-form",
+                on_submit=PublicBookingState.submit_booking,
+            ),
+            rx.cond(
+                PublicBookingState.booking_complete,
+                rx.card(
+                    rx.vstack(
+                        rx.heading("Your booking is confirmed", size="5"),
+                        rx.text(PublicBookingState.business_name),
+                        rx.text(PublicBookingState.confirmed_service),
+                        rx.text(PublicBookingState.confirmed_time),
+                        rx.cond(
+                            PublicBookingState.email_delivery == "sent",
+                            rx.text("A confirmation email was sent."),
+                            rx.text(
+                                "Your booking is confirmed, but email delivery is delayed. "
+                                "Save these details and contact the business if you need help."
+                            ),
+                        ),
+                    )
+                ),
             ),
             align="start",
             width="100%",
