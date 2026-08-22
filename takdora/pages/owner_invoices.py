@@ -10,7 +10,6 @@ from takdora.invoicing import (
     issue_invoice,
     owner_invoice,
     owner_invoices,
-    private_invoice_document,
     queue_invoice_email,
     set_received_total,
     update_invoice_draft,
@@ -137,11 +136,8 @@ class OwnerInvoicesState(AuthState):
             self.load_invoice()
 
     def download_pdf(self) -> rx.event.EventSpec | None:
-        document = private_invoice_document(self.require_owner(), self.selected_invoice_id)
-        if document is None:
-            self.message = "Invoice document not found."
-            return None
-        return rx.download(data=document[0], filename=document[1])
+        self.require_owner()
+        return rx.redirect(f"/documents/{self.selected_invoice_id}")
 
     def email_pdf(self) -> None:
         self.message = queue_invoice_email(

@@ -5,14 +5,16 @@ from __future__ import annotations
 import reflex as rx
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
+from sqlmodel import select
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 
-from takdora.auth import AuthState
+from takdora.auth import AuthState, resolve_session_owner
 from takdora.config import get_settings
-from takdora.models import record_probe
+from takdora.documents import DocumentStorageError, presigned_download
+from takdora.models import Invoice, InvoiceDocument, record_probe
 from takdora.pages.auth import register_page, request_reset_page, reset_password_page, sign_in_page
 from takdora.pages.availability import AvailabilityState, availability_page
 from takdora.pages.design_system import design_system
@@ -27,6 +29,7 @@ from takdora.pages.owner_invoices import (
 from takdora.pages.public_booking import PublicBookingState, privacy_page, public_booking_page
 from takdora.pages.services import ServicesState, services_page
 from takdora.pages.ui_preview import ui_preview
+from takdora.tenancy import get_workspace_for_owner
 from takdora.ui.shell import application_shell
 from takdora.ui.theme import TOKENS, takdora_theme
 
@@ -56,6 +59,40 @@ def health_response(_request: Request | None = None) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
+def private_document_response(request: Request) -> RedirectResponse | JSONResponse:
+    """Do not enumerate documents: unauthenticated and foreign requests look identical."""
+    owner = resolve_session_owner(request.cookies.get("takdora_session", ""))
+    try:
+        invoice_id = int(request.path_params["invoice_id"])
+        business = get_workspace_for_owner(owner)
+    except (TypeError, ValueError):
+        return JSONResponse({"detail": "Not found."}, status_code=404)
+    if owner is None or business is None:
+        return JSONResponse({"detail": "Not found."}, status_code=404)
+    with rx.session() as session:
+        invoice = session.exec(
+            select(Invoice).where(Invoice.id == invoice_id, Invoice.business_id == business.id)
+        ).first()
+        document = (
+            session.exec(
+                select(InvoiceDocument).where(InvoiceDocument.invoice_id == invoice.id)
+            ).first()
+            if invoice and invoice.state == "issued"
+            else None
+        )
+    if document is None or not document.storage_key:
+        return JSONResponse({"detail": "Not found."}, status_code=404)
+    try:
+        return RedirectResponse(
+            presigned_download(
+                get_settings(), key=document.storage_key, filename=document.filename
+            ),
+            status_code=307,
+        )
+    except DocumentStorageError:
+        return JSONResponse({"detail": "Not found."}, status_code=404)
+
+
 def index() -> rx.Component:
     return application_shell(
         rx.vstack(
@@ -83,7 +120,12 @@ def index() -> rx.Component:
 
 settings = get_settings()
 settings.initialize_sentry()
-health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
+health_api = Starlette(
+    routes=[
+        Route("/healthz", health_response, methods=["GET"]),
+        Route("/documents/{invoice_id:int}", private_document_response, methods=["GET"]),
+    ]
+)
 app = rx.App(
     api_transformer=health_api,
     theme=takdora_theme,

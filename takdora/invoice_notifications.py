@@ -8,6 +8,7 @@ import reflex as rx
 from sqlmodel import select
 
 from takdora.config import get_settings
+from takdora.documents import DocumentStorageError, read_private_bytes
 from takdora.invoicing import BIR_BOUNDARY
 from takdora.mailer import MailDeliveryError, Mailer
 from takdora.models import Business, Invoice, InvoiceDocument, InvoiceEmailOutbox
@@ -60,14 +61,17 @@ def dispatch_invoice_email(outbox_id: int, *, mailer: Mailer | None = None) -> s
         session.add(outbox)
         session.commit()
     try:
+        pdf = document.content
+        if outbox.message_type == "issued_pdf" and pdf is None and document.storage_key:
+            pdf = read_private_bytes(get_settings(), key=document.storage_key)
         (mailer or Mailer(get_settings())).send_invoice_email(
             outbox.recipient_email,
             subject,
             body,
-            pdf=document.content if outbox.message_type == "issued_pdf" else None,
+            pdf=pdf if outbox.message_type == "issued_pdf" else None,
             filename=document.filename,
         )
-    except MailDeliveryError:
+    except (DocumentStorageError, MailDeliveryError):
         with rx.session() as session:
             stored = session.get(InvoiceEmailOutbox, outbox.id)
             if stored:

@@ -10,6 +10,8 @@ import reflex as rx
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from takdora.config import get_settings
+from takdora.documents import DocumentStorageError, invoice_storage_key, store_private_bytes
 from takdora.models import (
     Booking,
     Business,
@@ -430,9 +432,33 @@ def issue_invoice(owner: OwnerAccount | None, invoice_id: int | str) -> InvoiceR
         session.add(sequence)
         session.add(invoice)
         session.flush()
-        session.add(
-            InvoiceDocument(invoice_id=invoice.id or 0, content=pdf, filename=f"{number}.pdf")
-        )
+        filename = f"{number}.pdf"
+        settings = get_settings()
+        if settings.object_storage_bucket:
+            try:
+                stored = store_private_bytes(
+                    settings,
+                    business.id or 0,
+                    pdf,
+                    "application/pdf",
+                    key=invoice_storage_key(business.id or 0),
+                )
+            except DocumentStorageError:
+                return InvoiceResult(
+                    "issue_failed", "Could not create the invoice PDF. Please try again."
+                )
+            session.add(
+                InvoiceDocument(
+                    invoice_id=invoice.id or 0,
+                    filename=filename,
+                    storage_key=stored.key,
+                    byte_size=stored.byte_size,
+                    checksum_sha256=stored.checksum_sha256,
+                )
+            )
+        else:
+            # Development-only compatibility while migrations are exercised without an object store.
+            session.add(InvoiceDocument(invoice_id=invoice.id or 0, content=pdf, filename=filename))
         try:
             session.commit()
         except IntegrityError:
@@ -464,7 +490,7 @@ def private_invoice_document(
             if invoice
             else None
         )
-        return (document.content, document.filename) if document else None
+        return (document.content, document.filename) if document and document.content else None
 
 
 def void_and_redraft(owner: OwnerAccount | None, invoice_id: int | str) -> InvoiceResult:

@@ -38,6 +38,11 @@ def test_sentry_is_opt_in_and_never_enables_default_pii_collection() -> None:
             "PUBLIC_APP_ORIGIN": "https://takdora.app",
             "SMTP_HOST": "smtp.example.test",
             "MAIL_FROM": "Takdora <no-reply@takdora.app>",
+            "OBJECT_STORAGE_ENDPOINT_URL": "https://objects.example.test",
+            "OBJECT_STORAGE_BUCKET": "takdora-private",
+            "OBJECT_STORAGE_ACCESS_KEY_ID": "access",
+            "OBJECT_STORAGE_SECRET_ACCESS_KEY": "secret",
+            "OBJECT_STORAGE_REGION": "sgp1",
         }
     )
     with patch("sentry_sdk.init") as initialize:

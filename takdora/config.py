@@ -25,6 +25,13 @@ class Settings:
     smtp_username: str | None
     smtp_password: str | None
     mail_from: str | None
+    object_storage_endpoint_url: str | None
+    object_storage_bucket: str | None
+    object_storage_access_key_id: str | None
+    object_storage_secret_access_key: str | None
+    object_storage_region: str | None
+    maintenance_mode: bool
+    maintenance_contact: str | None
 
     @property
     def is_production(self) -> bool:
@@ -44,6 +51,17 @@ class Settings:
             raise ConfigurationError("PUBLIC_APP_ORIGIN must be an HTTPS origin without a path.")
         if self.is_production and (not self.smtp_host or not self.mail_from):
             raise ConfigurationError("SMTP_HOST and MAIL_FROM must be configured in production.")
+        storage_values = (
+            self.object_storage_endpoint_url,
+            self.object_storage_bucket,
+            self.object_storage_access_key_id,
+            self.object_storage_secret_access_key,
+            self.object_storage_region,
+        )
+        if any(storage_values) and not all(storage_values):
+            raise ConfigurationError("All object storage settings must be configured together.")
+        if self.is_production and not all(storage_values):
+            raise ConfigurationError("Private object storage must be configured in production.")
 
     @property
     def sentry_environment(self) -> str:
@@ -89,6 +107,13 @@ def get_settings(environ: dict[str, str] | None = None) -> Settings:
         smtp_username=env.get("SMTP_USERNAME"),
         smtp_password=env.get("SMTP_PASSWORD"),
         mail_from=env.get("MAIL_FROM"),
+        object_storage_endpoint_url=env.get("OBJECT_STORAGE_ENDPOINT_URL"),
+        object_storage_bucket=env.get("OBJECT_STORAGE_BUCKET"),
+        object_storage_access_key_id=env.get("OBJECT_STORAGE_ACCESS_KEY_ID"),
+        object_storage_secret_access_key=env.get("OBJECT_STORAGE_SECRET_ACCESS_KEY"),
+        object_storage_region=env.get("OBJECT_STORAGE_REGION"),
+        maintenance_mode=env.get("MAINTENANCE_MODE", "false").casefold() == "true",
+        maintenance_contact=env.get("MAINTENANCE_CONTACT"),
     )
     settings.validate()
     return settings
