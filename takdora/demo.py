@@ -128,7 +128,9 @@ def reset_synthetic_demo(settings: Settings) -> Business:
         )
         session.add(service)
         session.add(BookingRules(business_id=business.id or 0))
-        for weekday in range(5):
+        # The synthetic portfolio path must be bookable whenever it is opened,
+        # including weekends, so reviewers can complete its lifecycle on any day.
+        for weekday in range(7):
             session.add(
                 WeeklyAvailabilityBlock(
                     business_id=business.id or 0,
