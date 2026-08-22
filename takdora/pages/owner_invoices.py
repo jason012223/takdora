@@ -212,79 +212,184 @@ def owner_invoice_detail_page() -> rx.Component:
             width="100%",
         )
 
-    draft = rx.card(
+    def section(title: str, description: str, *children: rx.Component) -> rx.Component:
+        return rx.vstack(
+            rx.heading(title, size="4"),
+            rx.text(description, size="2", color="var(--gray-11)"),
+            *children,
+            spacing="3",
+            align="start",
+            width="100%",
+        )
+
+    invoice_review = rx.card(
         rx.vstack(
-            rx.heading("Invoice draft", size="5"),
-            field(
-                "Customer name",
-                OwnerInvoicesState.customer_name,
-                OwnerInvoicesState.set_customer_name,
+            rx.heading("Ready to review", size="4"),
+            rx.text(
+                "Check these details before issuing. Issuing assigns a final number "
+                "and freezes the PDF.",
+                size="2",
+                color="var(--gray-11)",
             ),
-            field(
-                "Customer email",
-                OwnerInvoicesState.customer_email,
-                OwnerInvoicesState.set_customer_email,
-                type="email",
-            ),
-            field(
-                "Issue date",
-                OwnerInvoicesState.issue_date,
-                OwnerInvoicesState.set_issue_date,
-                type="date",
-            ),
-            field(
-                "Due date (optional)",
-                OwnerInvoicesState.due_date,
-                OwnerInvoicesState.set_due_date,
-                type="date",
-            ),
-            field(
-                "Line description",
-                OwnerInvoicesState.line_description,
-                OwnerInvoicesState.set_line_description,
-            ),
-            field(
-                "Quantity",
-                OwnerInvoicesState.line_quantity,
-                OwnerInvoicesState.set_line_quantity,
-                type="number",
-            ),
-            field(
-                "Unit price",
-                OwnerInvoicesState.line_unit_price,
-                OwnerInvoicesState.set_line_unit_price,
-                type="number",
-            ),
-            field(
-                "Tax label (optional)",
-                OwnerInvoicesState.tax_label,
-                OwnerInvoicesState.set_tax_label,
-            ),
-            field(
-                "Tax amount",
-                OwnerInvoicesState.tax_amount,
-                OwnerInvoicesState.set_tax_amount,
-                type="number",
-            ),
-            field(
-                "Business invoice details",
-                OwnerInvoicesState.invoice_identity,
-                OwnerInvoicesState.set_invoice_identity,
-            ),
-            rx.el.label("Notes"),
-            rx.text_area(value=OwnerInvoicesState.notes, on_change=OwnerInvoicesState.set_notes),
-            rx.text(BIR_BOUNDARY, size="2"),
+            rx.divider(),
             rx.hstack(
-                rx.button("Save draft", on_click=OwnerInvoicesState.save_draft),
-                rx.button(
-                    "Review and issue",
-                    on_click=OwnerInvoicesState.set_issue_open(True),
-                    variant="soft",
+                rx.text("Customer", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.customer_name),
+                width="100%",
+            ),
+            rx.hstack(
+                rx.text("Email", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.customer_email),
+                width="100%",
+            ),
+            rx.hstack(
+                rx.text("Service", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.line_description),
+                width="100%",
+            ),
+            rx.hstack(
+                rx.text("Quantity", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.line_quantity),
+                width="100%",
+            ),
+            rx.hstack(
+                rx.text("Unit price", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.line_unit_price),
+                width="100%",
+            ),
+            rx.cond(
+                OwnerInvoicesState.tax_label != "",
+                rx.hstack(
+                    rx.text("Tax", weight="medium", width="8rem"),
+                    rx.text(OwnerInvoicesState.tax_label + " — " + OwnerInvoicesState.tax_amount),
+                    width="100%",
+                ),
+            ),
+            rx.hstack(
+                rx.text("Issue date", weight="medium", width="8rem"),
+                rx.text(OwnerInvoicesState.issue_date),
+                width="100%",
+            ),
+            rx.cond(
+                OwnerInvoicesState.due_date != "",
+                rx.hstack(
+                    rx.text("Due date", weight="medium", width="8rem"),
+                    rx.text(OwnerInvoicesState.due_date),
+                    width="100%",
                 ),
             ),
             width="100%",
             align="start",
-        )
+        ),
+        width="100%",
+    )
+
+    draft = rx.vstack(
+        rx.card(
+            rx.vstack(
+                rx.heading("Invoice draft", size="5"),
+                section(
+                    "Customer and dates",
+                    "Use the contact details that should appear on this private invoice.",
+                    field(
+                        "Customer name",
+                        OwnerInvoicesState.customer_name,
+                        OwnerInvoicesState.set_customer_name,
+                    ),
+                    field(
+                        "Customer email",
+                        OwnerInvoicesState.customer_email,
+                        OwnerInvoicesState.set_customer_email,
+                        type="email",
+                    ),
+                    rx.hstack(
+                        field(
+                            "Issue date",
+                            OwnerInvoicesState.issue_date,
+                            OwnerInvoicesState.set_issue_date,
+                            type="date",
+                        ),
+                        field(
+                            "Due date (optional)",
+                            OwnerInvoicesState.due_date,
+                            OwnerInvoicesState.set_due_date,
+                            type="date",
+                        ),
+                        width="100%",
+                        wrap="wrap",
+                    ),
+                ),
+                rx.divider(),
+                section(
+                    "What you are charging for",
+                    "Add one clear service line. You can save and return to this draft "
+                    "before issuing.",
+                    field(
+                        "Line description",
+                        OwnerInvoicesState.line_description,
+                        OwnerInvoicesState.set_line_description,
+                    ),
+                    rx.hstack(
+                        field(
+                            "Quantity",
+                            OwnerInvoicesState.line_quantity,
+                            OwnerInvoicesState.set_line_quantity,
+                            type="number",
+                        ),
+                        field(
+                            "Unit price",
+                            OwnerInvoicesState.line_unit_price,
+                            OwnerInvoicesState.set_line_unit_price,
+                            type="number",
+                        ),
+                        width="100%",
+                        wrap="wrap",
+                    ),
+                    field(
+                        "Tax label (optional)",
+                        OwnerInvoicesState.tax_label,
+                        OwnerInvoicesState.set_tax_label,
+                    ),
+                    field(
+                        "Tax amount",
+                        OwnerInvoicesState.tax_amount,
+                        OwnerInvoicesState.set_tax_amount,
+                        type="number",
+                    ),
+                ),
+                rx.divider(),
+                section(
+                    "Business details and notes",
+                    "These details are saved into the issued PDF. Keep them accurate "
+                    "for your records.",
+                    field(
+                        "Business invoice details",
+                        OwnerInvoicesState.invoice_identity,
+                        OwnerInvoicesState.set_invoice_identity,
+                    ),
+                    rx.el.label("Notes"),
+                    rx.text_area(
+                        value=OwnerInvoicesState.notes, on_change=OwnerInvoicesState.set_notes
+                    ),
+                    rx.text(BIR_BOUNDARY, size="2"),
+                ),
+                rx.hstack(
+                    rx.button("Save draft", on_click=OwnerInvoicesState.save_draft),
+                    rx.button(
+                        "Review before issuing",
+                        on_click=OwnerInvoicesState.set_issue_open(True),
+                        variant="soft",
+                    ),
+                ),
+                width="100%",
+                align="start",
+            ),
+            width="100%",
+        ),
+        invoice_review,
+        width="100%",
+        spacing="4",
+        align="start",
     )
     issued = rx.card(
         rx.vstack(
@@ -305,13 +410,26 @@ def owner_invoice_detail_page() -> rx.Component:
                     on_click=OwnerInvoicesState.email_payment_update,
                     variant="soft",
                 ),
-                rx.button(
-                    "Void and create new draft",
-                    on_click=OwnerInvoicesState.set_void_open(True),
-                    color_scheme="red",
-                    variant="soft",
-                ),
                 wrap="wrap",
+            ),
+            rx.el.details(
+                rx.el.summary("Correction options"),
+                rx.vstack(
+                    rx.text(
+                        "Only use this when the issued invoice needs correction. The original "
+                        "stays on record and a separate draft opens.",
+                        size="2",
+                        color="var(--gray-11)",
+                    ),
+                    rx.button(
+                        "Void and create new draft",
+                        on_click=OwnerInvoicesState.set_void_open(True),
+                        color_scheme="red",
+                        variant="soft",
+                    ),
+                    align="start",
+                    spacing="2",
+                ),
             ),
             width="100%",
             align="start",
@@ -328,7 +446,10 @@ def owner_invoice_detail_page() -> rx.Component:
             rx.dialog.root(
                 rx.dialog.content(
                     rx.dialog.title("Issue this invoice?"),
-                    rx.dialog.description("This assigns its final number and freezes the PDF."),
+                    rx.dialog.description(
+                        "This assigns its final number and freezes the PDF. "
+                        "Check the review details first."
+                    ),
                     rx.hstack(
                         rx.dialog.close(rx.button("Keep editing", variant="soft")),
                         rx.dialog.close(

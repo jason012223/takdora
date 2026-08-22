@@ -24,9 +24,11 @@ from takdora.tenancy import WorkspaceAccessError, get_workspace_for_owner
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import availability_calendar, feedback
 
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
 
 class AvailabilityState(AuthState):
-    weekday: str = "0"
+    weekday: str = "Monday"
     start_time: str = "09:00"
     end_time: str = "17:00"
     closure_date: str = ""
@@ -39,6 +41,9 @@ class AvailabilityState(AuthState):
     schedule_message: str = ""
     timezone_label: str = ""
     blocks: list[dict[str, str]] = []
+    block_choices: list[str] = []
+    selected_block: str = ""
+    move_to_weekday: str = "Monday"
     services: list[str] = []
     preview_slots: list[tuple[str, str]] = []
 
@@ -64,11 +69,14 @@ class AvailabilityState(AuthState):
                 "weekday": str(item.weekday),
                 "start": item.start_time.strftime("%H:%M"),
                 "end": item.end_time.strftime("%H:%M"),
-                "day": ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")[item.weekday],
+                "day": WEEKDAYS[item.weekday],
                 "time": f"{item.start_time.strftime('%H:%M')}–{item.end_time.strftime('%H:%M')}",
             }
             for item in records
         ]
+        self.block_choices = [f"{item['id']}: {item['day']} {item['time']}" for item in self.blocks]
+        if not self.selected_block and self.block_choices:
+            self.selected_block = self.block_choices[0]
         self.services = [f"{item.id or 0}: {item.name}" for item in service_records]
         if not self.selected_service_id and self.services:
             self.selected_service_id = self.services[0]
@@ -113,7 +121,9 @@ class AvailabilityState(AuthState):
                         WeeklyBlockInput(item.weekday, item.start_time, item.end_time)
                         for item in current
                     ],
-                    WeeklyBlockInput(self.weekday, self.start_time, self.end_time),
+                    WeeklyBlockInput(
+                        str(WEEKDAYS.index(self.weekday)), self.start_time, self.end_time
+                    ),
                 ],
             )
         except (AuthenticationError, WorkspaceAccessError, ValueError) as error:
@@ -141,6 +151,23 @@ class AvailabilityState(AuthState):
             )
         except (AuthenticationError, WorkspaceAccessError, ValueError) as error:
             self.schedule_message = str(error)
+            return
+        self.schedule_message = "Working hours moved."
+        self.load_availability()
+
+    def move_selected_block(self) -> None:
+        try:
+            block_id = int(self.selected_block.split(":", maxsplit=1)[0])
+            block = next(item for item in self.blocks if item["id"] == str(block_id))
+            update_weekly_block(
+                self.require_owner(),
+                block_id,
+                WeeklyBlockInput(
+                    str(WEEKDAYS.index(self.move_to_weekday)), block["start"], block["end"]
+                ),
+            )
+        except (AuthenticationError, WorkspaceAccessError, ValueError, StopIteration):
+            self.schedule_message = "Choose a working-hours block and a day, then try again."
             return
         self.schedule_message = "Working hours moved."
         self.load_availability()
@@ -188,12 +215,21 @@ class AvailabilityState(AuthState):
 def availability_page() -> rx.Component:
     return owner_layout(
         rx.heading("Availability", size="7"),
-        rx.text("Set recurring working hours in your business time zone."),
+        rx.text(
+            "Start with recurring working hours. Booking rules and one-off closures are optional."
+        ),
         rx.text(AvailabilityState.timezone_label, weight="medium"),
         rx.card(
             rx.vstack(
+                rx.heading("1. Recurring working hours", size="5"),
+                rx.text(
+                    "Choose a day and the hours customers can request. You can add more "
+                    "than one period per day.",
+                    size="2",
+                    color="var(--gray-11)",
+                ),
                 rx.select(
-                    ["0", "1", "2", "3", "4", "5", "6"],
+                    list(WEEKDAYS),
                     value=AvailabilityState.weekday,
                     on_change=AvailabilityState.set_weekday,
                     aria_label="Weekday",
@@ -210,6 +246,7 @@ def availability_page() -> rx.Component:
                 ),
                 rx.button("Add working hours", on_click=AvailabilityState.add_block),
                 spacing="3",
+                align="start",
             ),
             width="100%",
         ),
@@ -231,6 +268,38 @@ def availability_page() -> rx.Component:
                 data_end=item["end"],
             ),
         ),
+        rx.el.details(
+            rx.el.summary("Move a working-hours block without dragging"),
+            rx.vstack(
+                rx.text(
+                    "Keyboard and screen-reader friendly option: select a saved period, "
+                    "choose its new day, then move it. The time stays the same.",
+                    size="2",
+                    color="var(--gray-11)",
+                ),
+                rx.select(
+                    AvailabilityState.block_choices,
+                    value=AvailabilityState.selected_block,
+                    on_change=AvailabilityState.set_selected_block,
+                    aria_label="Working-hours period to move",
+                ),
+                rx.select(
+                    list(WEEKDAYS),
+                    value=AvailabilityState.move_to_weekday,
+                    on_change=AvailabilityState.set_move_to_weekday,
+                    aria_label="New weekday",
+                ),
+                rx.button(
+                    "Move working hours",
+                    on_click=AvailabilityState.move_selected_block,
+                    variant="soft",
+                ),
+                align="start",
+                spacing="3",
+                width="100%",
+            ),
+            width="100%",
+        ),
         rx.input(
             id="schedule-drag-payload",
             value=AvailabilityState.drag_payload,
@@ -243,13 +312,22 @@ def availability_page() -> rx.Component:
             on_click=AvailabilityState.apply_drag_payload,
             display="none",
         ),
-        rx.grid(
-            *[
-                rx.box(day, data_schedule_drop=str(index), class_name="schedule-drop-target")
-                for index, day in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
-            ],
-            columns="7",
-            class_name="schedule-drop-grid",
+        rx.el.details(
+            rx.el.summary("Drag a period to a different day (optional)"),
+            rx.grid(
+                *[
+                    rx.box(day, data_schedule_drop=str(index), class_name="schedule-drop-target")
+                    for index, day in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+                ],
+                columns="7",
+                class_name="schedule-drop-grid",
+            ),
+            rx.text(
+                "Dragging is optional. Use the move controls above if you prefer the keyboard.",
+                size="2",
+                color="var(--gray-11)",
+            ),
+            width="100%",
         ),
         rx.el.details(
             rx.el.summary("Booking rules (optional)"),
@@ -259,6 +337,12 @@ def availability_page() -> rx.Component:
                     value=AvailabilityState.slot_interval,
                     on_change=AvailabilityState.set_slot_interval,
                     aria_label="Slot interval in minutes",
+                ),
+                rx.text(
+                    "These rules apply after your working hours. Keep the defaults unless "
+                    "your business needs a different policy.",
+                    size="2",
+                    color="var(--gray-11)",
                 ),
                 rx.input(
                     type="number",
@@ -282,15 +366,25 @@ def availability_page() -> rx.Component:
                 spacing="3",
             ),
         ),
-        rx.card(
-            rx.hstack(
-                rx.input(
-                    type="date",
-                    value=AvailabilityState.closure_date,
-                    on_change=AvailabilityState.set_closure_date,
-                    aria_label="Date to close",
+        rx.el.details(
+            rx.el.summary("Close one date (optional)"),
+            rx.vstack(
+                rx.text(
+                    "Use this for a holiday or one-off closure. Your recurring hours "
+                    "stay unchanged.",
+                    size="2",
+                    color="var(--gray-11)",
                 ),
-                rx.button("Close date", variant="soft", on_click=AvailabilityState.close_date),
+                rx.hstack(
+                    rx.input(
+                        type="date",
+                        value=AvailabilityState.closure_date,
+                        on_change=AvailabilityState.set_closure_date,
+                        aria_label="Date to close",
+                    ),
+                    rx.button("Close date", variant="soft", on_click=AvailabilityState.close_date),
+                ),
+                align="start",
             ),
             width="100%",
         ),
