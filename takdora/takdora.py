@@ -12,6 +12,8 @@ from starlette.routing import Route
 
 from takdora.config import get_settings
 from takdora.models import record_probe
+from takdora.ui.shell import application_shell
+from takdora.ui.theme import TOKENS, takdora_theme
 
 
 class FoundationState(rx.State):
@@ -40,25 +42,32 @@ def health_response(_request: Request | None = None) -> JSONResponse:
 
 
 def index() -> rx.Component:
-    return rx.center(
+    return application_shell(
         rx.vstack(
-            rx.heading("Takdora foundation", size="8"),
-            rx.text("A safe readiness check for the application database."),
+            rx.badge("Takdora foundation", color_scheme="orange", variant="soft"),
+            rx.heading(
+                "A dependable start for your business.", size="8", color=TOKENS["foreground"]
+            ),
+            rx.text(
+                "This safe readiness check confirms the Takdora application database is available.",
+                color=TOKENS["muted"],
+            ),
             rx.button(
                 "Check database readiness",
                 on_click=FoundationState.run_readiness_probe,
                 id="readiness-control",
+                min_height=TOKENS["touch_target"],
             ),
             rx.text(FoundationState.probe_result, id="readiness-result", role="status"),
             spacing="4",
-            align="center",
+            align="start",
+            max_width="38rem",
         ),
-        min_height="100vh",
     )
 
 
 settings = get_settings()
 settings.initialize_sentry()
 health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
-app = rx.App(api_transformer=health_api)
+app = rx.App(api_transformer=health_api, theme=takdora_theme, stylesheets=["/takdora.css"])
 app.add_page(index, route="/", title="Takdora")
