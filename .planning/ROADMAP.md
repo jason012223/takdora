@@ -111,8 +111,14 @@ Plans:
   3. A booking submission creates at most one appointment even when the customer retries, and simultaneous attempts cannot reserve overlapping active times.
   4. A customer receives an unambiguous success or error response, and an email confirmation is sent only after a successful booking is saved.
 
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+
+- [ ] 04-01-PLAN.md — Publish and resolve safe public business pages with a compact browser-local booking form.
+- [ ] 04-02-PLAN.md — Make booking submission idempotent and enforce PostgreSQL non-overlap.
+- [ ] 04-03-PLAN.md — Deliver post-commit confirmation email and customer conflict recovery.
 
 ### Phase 5: Owner Booking Operations
 
