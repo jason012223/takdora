@@ -567,4 +567,25 @@ def queue_invoice_email(
                 )
             )
             session.commit()
-    return InvoiceResult("email_queued", "Invoice email queued for delivery.", record_id)
+            record = session.exec(
+                select(InvoiceEmailOutbox).where(
+                    InvoiceEmailOutbox.invoice_id == invoice.id,
+                    InvoiceEmailOutbox.message_type == message_type,
+                )
+            ).first()
+    if record is None:
+        return InvoiceResult(
+            "delivery_delayed", "Invoice email is delayed. Please try again shortly."
+        )
+    # Delivery is deliberately outside the committed financial transaction.
+    from takdora.invoice_notifications import dispatch_invoice_email
+
+    outcome = dispatch_invoice_email(record.id or 0)
+    message = (
+        "Invoice email sent."
+        if outcome == "sent"
+        else "Invoice email is delayed. Please try again shortly."
+    )
+    return InvoiceResult(
+        "email_sent" if outcome == "sent" else "delivery_delayed", message, record_id
+    )

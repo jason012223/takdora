@@ -20,6 +20,8 @@ class OutgoingMessage:
     recipient: str
     subject: str
     body: str
+    attachment: bytes | None = None
+    attachment_filename: str | None = None
 
 
 class Mailer:
@@ -36,6 +38,13 @@ class Mailer:
         email["To"] = message.recipient
         email["Subject"] = message.subject
         email.set_content(message.body)
+        if message.attachment is not None and message.attachment_filename:
+            email.add_attachment(
+                message.attachment,
+                maintype="application",
+                subtype="pdf",
+                filename=message.attachment_filename,
+            )
         try:
             with smtplib.SMTP(
                 self._settings.smtp_host, self._settings.smtp_port, timeout=10
@@ -76,6 +85,17 @@ class Mailer:
     def send_booking_confirmation(self, recipient: str, subject: str, body: str) -> None:
         self._send(OutgoingMessage(recipient, subject, body))
 
+    def send_invoice_email(
+        self,
+        recipient: str,
+        subject: str,
+        body: str,
+        *,
+        pdf: bytes | None = None,
+        filename: str = "",
+    ) -> None:
+        self._send(OutgoingMessage(recipient, subject, body, pdf, filename or None))
+
 
 @dataclass
 class InMemoryMailer:
@@ -105,3 +125,14 @@ class InMemoryMailer:
 
     def send_booking_confirmation(self, recipient: str, subject: str, body: str) -> None:
         self._send(OutgoingMessage(recipient, subject, body))
+
+    def send_invoice_email(
+        self,
+        recipient: str,
+        subject: str,
+        body: str,
+        *,
+        pdf: bytes | None = None,
+        filename: str = "",
+    ) -> None:
+        self._send(OutgoingMessage(recipient, subject, body, pdf, filename or None))
