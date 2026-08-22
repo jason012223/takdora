@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import reflex as rx
 from sqlmodel import select
@@ -24,6 +25,15 @@ class WorkspaceRecord:
     is_active: bool = True
 
 
+@dataclass(frozen=True)
+class ScheduledDeletion:
+    """Display-safe deletion outcome; raw tenant data remains server-side."""
+
+    is_active: bool
+    requested_at: datetime
+    purge_after: datetime
+
+
 def require_owner(owner: OwnerAccount | None) -> OwnerAccount:
     """Reject any private workflow without a server-resolved account."""
     if owner is None or owner.id is None:
@@ -42,6 +52,52 @@ def display_safe_business_profile(owner_id: int, business: WorkspaceRecord) -> d
     """Return only display-safe fields after the tenant guard has succeeded."""
     authorized_business = require_business_for_owner(owner_id, business)
     return {"name": authorized_business.name}
+
+
+def schedule_workspace_deletion(
+    owner_id: int, business: WorkspaceRecord, *, confirmed: bool
+) -> ScheduledDeletion:
+    """Require a deliberate owner confirmation before the irreversible lifecycle begins."""
+    require_business_for_owner(owner_id, business)
+    if not confirmed:
+        raise WorkspaceAccessError("Deletion confirmation is required.")
+    requested_at = datetime.now(UTC)
+    return ScheduledDeletion(
+        is_active=False,
+        requested_at=requested_at,
+        purge_after=requested_at + timedelta(days=30),
+    )
+
+
+def request_workspace_deletion(owner: OwnerAccount | None, *, confirmed: bool) -> Business:
+    """Deactivate the server-resolved owner's workspace and assign its purge deadline."""
+    authorized_owner = require_owner(owner)
+    with rx.session() as session:
+        business = session.exec(
+            select(Business).where(
+                Business.creating_owner_id == authorized_owner.id,
+                Business.is_active.is_(True),
+            )
+        ).first()
+        if business is None:
+            raise WorkspaceAccessError("Workspace not found.")
+        outcome = schedule_workspace_deletion(
+            authorized_owner.id or 0,
+            WorkspaceRecord(
+                id=business.id or 0,
+                creating_owner_id=business.creating_owner_id,
+                name=business.name,
+                is_active=business.is_active,
+            ),
+            confirmed=confirmed,
+        )
+        business.is_active = outcome.is_active
+        business.deletion_requested_at = outcome.requested_at
+        business.purge_after = outcome.purge_after
+        session.add(business)
+        session.commit()
+        session.refresh(business)
+        return business
 
 
 def create_workspace(owner: OwnerAccount) -> Business:
