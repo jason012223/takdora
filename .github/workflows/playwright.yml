@@ -1,0 +1,32 @@
+name: Browser smoke
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - run: uv sync --frozen
+      - run: uv run playwright install --with-deps chromium
+      - run: docker compose up --build -d
+      - run: docker compose exec -T app curl --fail --retry 20 --retry-delay 2 http://localhost:8000/healthz
+      - run: uv run pytest tests/e2e/test_foundation_smoke.py -q
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-output
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+      - if: always()
+        run: docker compose down --volumes
