@@ -56,3 +56,20 @@ The project owner must authorize Render and Sentry, connect the GitHub
 repository, supply `API_URL` and `SENTRY_DSN`, and approve the first deployment.
 This repository deliberately cannot create those accounts or access their
 secrets.
+
+## Staging release gate
+
+Apply `render.staging.yaml` to a separate Render environment and configure a
+different database, object-storage bucket or prefix, sender, Sentry DSN, and
+credentials. Never copy a production resource into staging. Before merging to
+`main`, record one restore drill into a non-production database, then run:
+
+```powershell
+.\scripts\release-check.ps1 -StagingUrl https://<staging-service> -BackupEvidencePath .\private\staging-restore-evidence.txt
+```
+
+For a Windows Docker browser check that does not rely on forwarded ports, run:
+
+```powershell
+docker compose -f compose.yaml -f compose.e2e.yaml run --rm e2e uv run pytest tests/e2e/test_foundation_smoke.py -q
+```

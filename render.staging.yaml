@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: takdora-staging
+    runtime: docker
+    branch: staging
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: takdora-staging-postgres
+          property: connectionString
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: API_URL
+        sync: false
+      - key: PUBLIC_APP_ORIGIN
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: OBJECT_STORAGE_ENDPOINT_URL
+        sync: false
+      - key: OBJECT_STORAGE_BUCKET
+        sync: false
+      - key: OBJECT_STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: OBJECT_STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: OBJECT_STORAGE_REGION
+        sync: false
+databases:
+  - name: takdora-staging-postgres
+    databaseName: takdora_staging
+    user: takdora_staging
+    plan: basic-256mb
+    region: singapore
