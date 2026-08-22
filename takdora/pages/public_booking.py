@@ -31,6 +31,7 @@ class PublicBookingState(rx.State):
     slot_starts: dict[str, str] = {}
     selected_service_id: str = ""
     selected_service_label: str = ""
+    selected_date: str = ""
     selected_slot: str = ""
     selected_slot_label: str = ""
     customer_name: str = ""
@@ -60,6 +61,8 @@ class PublicBookingState(rx.State):
         self.contact_route = result.business.contact_email or result.business.contact_phone
         self.business_timezone = result.business.timezone
         self.timezone_label = result.business.timezone
+        if not self.selected_date:
+            self.selected_date = date.today().isoformat()
         self.services = [
             f"{item.name} · {item.duration_label} · {item.price_label}"
             for item in result.business.services
@@ -91,6 +94,19 @@ class PublicBookingState(rx.State):
         self.selected_slot_label = ""
         self.load_slots()
 
+    def select_date(self, selected_date: str) -> None:
+        """Reload availability for one customer-visible calendar day."""
+        try:
+            date.fromisoformat(selected_date)
+        except ValueError:
+            self.booking_message = "Choose a valid date."
+            self.booking_message_kind = "error"
+            return
+        self.selected_date = selected_date
+        self.selected_slot = ""
+        self.selected_slot_label = ""
+        self.load_slots()
+
     def select_slot(self, slot_label: str) -> None:
         self.selected_slot_label = slot_label
         self.selected_slot = self.slot_starts.get(slot_label, "")
@@ -104,7 +120,7 @@ class PublicBookingState(rx.State):
             results = public_slots_for_day(
                 self.business_slug,
                 int(self.selected_service_id),
-                date.today(),
+                date.fromisoformat(self.selected_date),
                 self.browser_timezone,
             )
         except (PublicBookingUnavailable, ValueError):
@@ -203,6 +219,15 @@ def public_booking_page() -> rx.Component:
                         id="public-service",
                         value=PublicBookingState.selected_service_label,
                         on_change=PublicBookingState.select_service,
+                        width="100%",
+                    ),
+                    rx.el.label("Date", html_for="public-date"),
+                    rx.input(
+                        id="public-date",
+                        type="date",
+                        value=PublicBookingState.selected_date,
+                        on_change=PublicBookingState.select_date,
+                        min=date.today().isoformat(),
                         width="100%",
                     ),
                     rx.el.label("Available time", html_for="public-slot"),

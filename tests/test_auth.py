@@ -38,6 +38,14 @@ def test_session_credentials_are_opaque_and_expire_or_revoke_server_side() -> No
     )
 
 
+def test_session_expiry_accepts_utc_naive_database_timestamps() -> None:
+    raw, digest = create_session_credential()
+
+    assert verify_session_credential(
+        raw, digest, (datetime.now(UTC) + timedelta(hours=1)).replace(tzinfo=None)
+    )
+
+
 @pytest.mark.parametrize("credential", ["", "malformed", "x" * 10])
 def test_malformed_session_credentials_are_denied(credential: str) -> None:
     with pytest.raises(SessionCredentialError):

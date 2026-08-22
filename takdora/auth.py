@@ -22,6 +22,11 @@ RESET_TTL = timedelta(minutes=30)
 _EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+def _as_utc(value: datetime) -> datetime:
+    """Treat database timestamps without an offset as UTC before comparison."""
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
 class AuthenticationError(ValueError):
     """Raised for a bounded invalid login response."""
 
@@ -94,7 +99,7 @@ def reset_token_is_usable(
         return False
     return (
         consumed_at is None
-        and expires_at > datetime.now(UTC)
+        and _as_utc(expires_at) > datetime.now(UTC)
         and hmac.compare_digest(token_digest, stored_digest)
     )
 
@@ -230,7 +235,7 @@ def verify_session_credential(
         return False
     return (
         not revoked
-        and expires_at > datetime.now(UTC)
+        and _as_utc(expires_at) > datetime.now(UTC)
         and hmac.compare_digest(credential_digest, stored_digest)
     )
 

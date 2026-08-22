@@ -28,6 +28,17 @@ def test_reset_tokens_are_one_time_and_expire_in_thirty_minutes() -> None:
     )
 
 
+def test_reset_token_expiry_accepts_utc_naive_database_timestamps() -> None:
+    raw, digest = create_one_time_token()
+
+    assert reset_token_is_usable(
+        raw,
+        digest,
+        (datetime.now(UTC) + timedelta(hours=1)).replace(tzinfo=None),
+        consumed_at=None,
+    )
+
+
 def test_reset_urls_are_absolute_and_do_not_leak_email() -> None:
     url = build_public_token_url("https://takdora.app", "/reset-password", "safe-token-value")
     assert url == "https://takdora.app/reset-password?token=safe-token-value"
