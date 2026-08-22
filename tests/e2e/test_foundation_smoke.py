@@ -10,9 +10,10 @@ def test_readiness_control_and_healthz_work_against_compose(app_base_url: str) -
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
-        page.set_default_timeout(10_000)
+        # A fresh Reflex frontend compile can take longer than a warm dev server.
+        page.set_default_timeout(30_000)
         try:
-            page.goto(app_base_url, wait_until="domcontentloaded")
+            page.goto(app_base_url, wait_until="domcontentloaded", timeout=60_000)
             control = page.locator("#readiness-control")
             expect(control).to_be_visible()
             control.click()
