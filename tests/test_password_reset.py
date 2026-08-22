@@ -13,6 +13,7 @@ from takdora.auth import (
     reset_token_is_usable,
 )
 from takdora.config import ConfigurationError, get_settings
+from takdora.mailer import InMemoryMailer, MailDeliveryError
 
 
 def test_reset_tokens_are_one_time_and_expire_in_thirty_minutes() -> None:
@@ -55,3 +56,15 @@ def test_new_password_policy_is_shared_with_registration() -> None:
         from takdora.auth import validate_password
 
         validate_password("short")
+
+
+def test_mailer_sends_only_absolute_one_time_links_with_safe_failure() -> None:
+    mailer = InMemoryMailer()
+    mailer.send_password_reset("owner@example.com", "https://takdora.app/reset-password?token=safe")
+    assert len(mailer.sent_messages) == 1
+    assert "https://takdora.app/reset-password?token=safe" in mailer.sent_messages[0].body
+    assert "password" not in mailer.sent_messages[0].body.casefold().replace("reset password", "")
+
+    failing_mailer = InMemoryMailer(fail_delivery=True)
+    with pytest.raises(MailDeliveryError, match="try again"):
+        failing_mailer.send_verification("owner@example.com", "https://takdora.app/verify-email?token=safe")
