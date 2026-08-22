@@ -66,17 +66,19 @@ def owner_layout(*children: rx.Component) -> rx.Component:
 
 def marketing_layout(*children: rx.Component) -> rx.Component:
     return rx.box(
+        rx.link("Skip to content", href="#preview-main", class_name="skip-link"),
         _navigation(
-            "Marketing navigation", [("How it works", "#how-it-works"), ("Demo", "/design-system")]
+            "Marketing navigation",
+            [
+                ("How it works", "/#how-it-works"),
+                ("Features", "/features"),
+                ("Help", "/help"),
+                ("Portfolio", "/portfolio"),
+                ("Demo", "/demo"),
+            ],
         ),
         rx.el.main(
-            rx.vstack(
-                rx.button(
-                    "Create your business", color_scheme="orange", min_height=TOKENS["touch_target"]
-                ),
-                *children,
-                spacing="6",
-            ),
+            rx.vstack(*children, spacing="6"),
             id="preview-main",
             **container_style,
             padding_y="2rem",
