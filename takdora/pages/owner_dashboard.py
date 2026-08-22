@@ -6,6 +6,8 @@ import reflex as rx
 
 from takdora.auth import AuthenticationError, AuthState
 from takdora.delivery import delivery_issues_for_owner, retry_delivery_for_owner
+from takdora.demo import is_synthetic_demo_owner
+from takdora.pages.demo import synthetic_demo_banner
 from takdora.tenancy import WorkspaceAccessError, create_workspace, get_workspace_for_owner
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import empty_state, feedback
@@ -17,6 +19,7 @@ class OwnerDashboardState(AuthState):
     workspace_name: str = ""
     dashboard_message: str = ""
     delivery_issues: list[dict[str, str | int]] = []
+    is_synthetic_demo: bool = False
 
     def load_dashboard(self) -> rx.event.EventSpec | None:
         try:
@@ -25,6 +28,7 @@ class OwnerDashboardState(AuthState):
         except (AuthenticationError, WorkspaceAccessError):
             return rx.redirect("/sign-in")
         self.workspace_name = workspace.name if workspace else ""
+        self.is_synthetic_demo = is_synthetic_demo_owner(owner)
         self.delivery_issues = delivery_issues_for_owner(owner)
         return None
 
@@ -54,6 +58,7 @@ class OwnerDashboardState(AuthState):
 
 def owner_dashboard() -> rx.Component:
     return owner_layout(
+        rx.cond(OwnerDashboardState.is_synthetic_demo, synthetic_demo_banner()),
         rx.cond(
             OwnerDashboardState.workspace_name != "",
             rx.vstack(

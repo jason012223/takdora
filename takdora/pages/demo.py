@@ -22,6 +22,16 @@ class DemoState(AuthState):
         return rx.redirect("/owner")
 
 
+def synthetic_demo_banner() -> rx.Component:
+    """Persistent owner-side boundary for the resettable fixture."""
+    return rx.callout(
+        "Synthetic demo data. This resettable workspace has no external delivery side effects.",
+        icon="info",
+        color_scheme="orange",
+        id="synthetic-demo-banner",
+    )
+
+
 def demo_page() -> rx.Component:
     return marketing_layout(
         rx.vstack(

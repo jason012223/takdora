@@ -17,7 +17,9 @@ from takdora.booking_operations import (
     replacement_slots,
     reschedule_booking,
 )
+from takdora.demo import is_synthetic_demo_owner
 from takdora.invoicing import start_invoice_draft
+from takdora.pages.demo import synthetic_demo_banner
 from takdora.tenancy import WorkspaceAccessError
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import detail_group, feedback, status_badge
@@ -37,6 +39,7 @@ class OwnerBookingsState(AuthState):
     reschedule_open: bool = False
     replacement_choices: list[str] = []
     selected_replacement: str = ""
+    is_synthetic_demo: bool = False
 
     def _rows(self, records: tuple) -> list[dict[str, str]]:
         return [
@@ -52,6 +55,7 @@ class OwnerBookingsState(AuthState):
     def load_bookings(self) -> rx.event.EventSpec | None:
         try:
             owner = self.require_owner()
+            self.is_synthetic_demo = is_synthetic_demo_owner(owner)
             if not self.selected_date:
                 self.selected_date = datetime.now(UTC).date().isoformat()
             records = (
@@ -172,6 +176,7 @@ def owner_bookings_page() -> rx.Component:
         ),
     )
     return owner_layout(
+        rx.cond(OwnerBookingsState.is_synthetic_demo, synthetic_demo_banner()),
         rx.vstack(
             rx.heading("Bookings", size="7"),
             rx.text("Review appointments and make deliberate changes."),

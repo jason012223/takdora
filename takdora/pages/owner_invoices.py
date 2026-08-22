@@ -5,6 +5,7 @@ from __future__ import annotations
 import reflex as rx
 
 from takdora.auth import AuthenticationError, AuthState
+from takdora.demo import is_synthetic_demo_owner
 from takdora.invoicing import (
     BIR_BOUNDARY,
     issue_invoice,
@@ -16,6 +17,7 @@ from takdora.invoicing import (
     void_and_redraft,
 )
 from takdora.tenancy import WorkspaceAccessError
+from takdora.pages.demo import synthetic_demo_banner
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import feedback, status_badge
 
@@ -42,6 +44,7 @@ class OwnerInvoicesState(AuthState):
     received_total: str = "0.00"
     issue_open: bool = False
     void_open: bool = False
+    is_synthetic_demo: bool = False
 
     def _id_from_route(self) -> str:
         route_id = self.router_data.get("invoice_id", "")
@@ -49,7 +52,9 @@ class OwnerInvoicesState(AuthState):
 
     def load_invoice(self) -> rx.event.EventSpec | None:
         try:
-            record = owner_invoice(self.require_owner(), self._id_from_route())
+            owner = self.require_owner()
+            self.is_synthetic_demo = is_synthetic_demo_owner(owner)
+            record = owner_invoice(owner, self._id_from_route())
         except (AuthenticationError, WorkspaceAccessError):
             return rx.redirect("/sign-in")
         if record is None:
@@ -76,7 +81,9 @@ class OwnerInvoicesState(AuthState):
 
     def load_list(self) -> rx.event.EventSpec | None:
         try:
-            records = owner_invoices(self.require_owner(), self.status_filter)
+            owner = self.require_owner()
+            self.is_synthetic_demo = is_synthetic_demo_owner(owner)
+            records = owner_invoices(owner, self.status_filter)
         except (AuthenticationError, WorkspaceAccessError):
             return rx.redirect("/sign-in")
         self.rows = [
@@ -157,6 +164,7 @@ class OwnerInvoicesState(AuthState):
 
 def owner_invoices_page() -> rx.Component:
     return owner_layout(
+        rx.cond(OwnerInvoicesState.is_synthetic_demo, synthetic_demo_banner()),
         rx.vstack(
             rx.heading("Invoices", size="7"),
             rx.text("Create invoices from completed bookings and track payments manually."),
@@ -310,6 +318,7 @@ def owner_invoice_detail_page() -> rx.Component:
         )
     )
     return owner_layout(
+        rx.cond(OwnerInvoicesState.is_synthetic_demo, synthetic_demo_banner()),
         rx.vstack(
             rx.cond(OwnerInvoicesState.state == "draft", draft, issued),
             rx.cond(
