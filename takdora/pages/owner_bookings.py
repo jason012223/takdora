@@ -17,6 +17,7 @@ from takdora.booking_operations import (
     replacement_slots,
     reschedule_booking,
 )
+from takdora.invoicing import start_invoice_draft
 from takdora.tenancy import WorkspaceAccessError
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import detail_group, feedback, status_badge
@@ -114,6 +115,13 @@ class OwnerBookingsState(AuthState):
         if result.booking:
             self.open_booking(str(result.booking.id))
         self.load_bookings()
+
+    def create_invoice(self) -> rx.event.EventSpec | None:
+        result = start_invoice_draft(self.require_owner(), self.detail.get("id", ""))
+        self.message = result.message
+        if result.invoice_id and result.outcome in {"draft_created", "already_invoiced"}:
+            return rx.redirect(f"/owner/invoices/{result.invoice_id}")
+        return None
 
     def open_reschedule(self) -> None:
         booking_id = self.detail.get("id", "")
@@ -217,6 +225,10 @@ def owner_bookings_page() -> rx.Component:
                             ]
                         ),
                         status_badge(OwnerBookingsState.detail["status_label"]),
+                        rx.cond(
+                            OwnerBookingsState.detail["status"] == "completed",
+                            rx.button("Create invoice", on_click=OwnerBookingsState.create_invoice),
+                        ),
                         rx.cond(
                             OwnerBookingsState.detail["status"] == "scheduled",
                             rx.hstack(

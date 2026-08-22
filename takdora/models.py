@@ -221,6 +221,95 @@ class BookingChangeOutbox(rx.Model, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class Invoice(rx.Model, table=True):
+    """Tenant-owned invoice draft or immutable issued invoice header."""
+
+    __table_args__ = (UniqueConstraint("business_id", "invoice_number", name="uq_invoice_number"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    booking_id: int = Field(foreign_key="booking.id", index=True)
+    state: str = Field(default="draft", index=True)
+    invoice_number: str | None = Field(default=None, index=True)
+    customer_name: str = Field(max_length=160)
+    customer_email: str = Field(max_length=254)
+    customer_phone: str | None = Field(default=None, max_length=80)
+    invoice_identity: str = Field(default="", max_length=2000)
+    issue_date: date = Field(default_factory=date.today)
+    due_date: date | None = Field(default=None)
+    notes: str = Field(default="", max_length=2000)
+    currency: str = Field(default="PHP", max_length=3)
+    subtotal: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    tax_total: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    grand_total: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    received_total: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    remaining_balance: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    payment_status: str = Field(default="outstanding", index=True)
+    issued_at: datetime | None = Field(default=None)
+    voided_at: datetime | None = Field(default=None)
+    payment_updated_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class InvoiceLine(rx.Model, table=True):
+    """A draft-owned line retained as the issued record's stable input."""
+
+    invoice_id: int = Field(foreign_key="invoice.id", index=True)
+    description: str = Field(max_length=500)
+    quantity: Decimal = Field(default=Decimal("1"), max_digits=12, decimal_places=2)
+    unit_price: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    extension: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class InvoiceTaxLine(rx.Model, table=True):
+    """A configurable non-certifying tax line for a single invoice."""
+
+    invoice_id: int = Field(foreign_key="invoice.id", index=True)
+    label: str = Field(max_length=80)
+    rate: Decimal | None = Field(default=None, max_digits=7, decimal_places=4)
+    amount: Decimal = Field(default=Decimal("0.00"), max_digits=14, decimal_places=2)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class InvoiceSequence(rx.Model, table=True):
+    """One locked counter per business; no browser input selects a number."""
+
+    __table_args__ = (UniqueConstraint("business_id", name="uq_invoice_sequence_business"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    next_number: int = Field(default=1)
+
+
+class InvoiceDocument(rx.Model, table=True):
+    """Server-held immutable PDF bytes; there is deliberately no public URL."""
+
+    __table_args__ = (UniqueConstraint("invoice_id", name="uq_invoice_document"),)
+
+    invoice_id: int = Field(foreign_key="invoice.id", index=True)
+    content: bytes
+    content_type: str = Field(default="application/pdf", max_length=80)
+    filename: str = Field(max_length=180)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class InvoiceEmailOutbox(rx.Model, table=True):
+    """One deliberate post-commit delivery request per invoice and message kind."""
+
+    __table_args__ = (UniqueConstraint("invoice_id", "message_type", name="uq_invoice_email_kind"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    invoice_id: int = Field(foreign_key="invoice.id", index=True)
+    message_type: str = Field(max_length=32)
+    recipient_email: str = Field(max_length=254)
+    delivery_status: str = Field(default="pending", index=True)
+    attempts: int = Field(default=0)
+    last_error: str | None = Field(default=None, max_length=240)
+    sent_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 def record_probe() -> FoundationProbe:
     """Persist then retrieve a diagnostic row using Reflex's configured database session."""
     with rx.session() as session:
