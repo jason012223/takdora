@@ -67,8 +67,14 @@ Plans:
   3. A business owner can configure the business name, contact details, address, public slug, logo, accent color, time zone, and currency, with Asia/Manila and PHP preselected.
   4. A business owner can provide the invoice identity fields and see a checklist of the essentials still needed before the public page can be published.
 
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+
+- [ ] 02-01-PLAN.md — Secure owner accounts, persistent sessions, verification, and password resets.
+- [ ] 02-02-PLAN.md — One-owner workspaces, tenant isolation, and deliberate scheduled deletion.
+- [ ] 02-03-PLAN.md — Resumable business setup, publish readiness, and durable public-address redirects.
 
 ### Phase 3: Services and Availability
 
