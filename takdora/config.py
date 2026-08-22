@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 
 class ConfigurationError(ValueError):
@@ -18,6 +19,12 @@ class Settings:
     app_secret_key: str | None
     sentry_dsn: str | None
     release: str | None
+    public_app_origin: str
+    smtp_host: str | None
+    smtp_port: int
+    smtp_username: str | None
+    smtp_password: str | None
+    mail_from: str | None
 
     @property
     def is_production(self) -> bool:
@@ -30,6 +37,13 @@ class Settings:
             raise ConfigurationError("APP_SECRET_KEY must be configured in production.")
         if self.is_production and not self.api_url.startswith("https://"):
             raise ConfigurationError("API_URL must use HTTPS in production.")
+        origin = urlsplit(self.public_app_origin)
+        if not origin.netloc or origin.path not in ("", "/"):
+            raise ConfigurationError("PUBLIC_APP_ORIGIN must be an absolute origin without a path.")
+        if self.is_production and origin.scheme != "https":
+            raise ConfigurationError("PUBLIC_APP_ORIGIN must be an HTTPS origin without a path.")
+        if self.is_production and (not self.smtp_host or not self.mail_from):
+            raise ConfigurationError("SMTP_HOST and MAIL_FROM must be configured in production.")
 
     @property
     def sentry_environment(self) -> str:
@@ -69,6 +83,12 @@ def get_settings(environ: dict[str, str] | None = None) -> Settings:
         app_secret_key=env.get("APP_SECRET_KEY"),
         sentry_dsn=env.get("SENTRY_DSN"),
         release=env.get("RENDER_GIT_COMMIT") or env.get("APP_RELEASE"),
+        public_app_origin=env.get("PUBLIC_APP_ORIGIN", "http://localhost:3000"),
+        smtp_host=env.get("SMTP_HOST"),
+        smtp_port=int(env.get("SMTP_PORT", "587")),
+        smtp_username=env.get("SMTP_USERNAME"),
+        smtp_password=env.get("SMTP_PASSWORD"),
+        mail_from=env.get("MAIL_FROM"),
     )
     settings.validate()
     return settings

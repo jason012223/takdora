@@ -7,14 +7,16 @@ import hmac
 import re
 import secrets
 from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode, urlsplit
 
 import reflex as rx
 from sqlmodel import select
 
-from takdora.models import AuthSession, OwnerAccount
+from takdora.models import AuthSession, OwnerAccount, PasswordResetToken
 
 MIN_PASSWORD_LENGTH = 12
 SESSION_TTL = timedelta(days=14)
+RESET_TTL = timedelta(minutes=30)
 _EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -72,6 +74,101 @@ def create_session_credential() -> tuple[str, str]:
     """Return an opaque raw token and its server-persistable digest."""
     raw = secrets.token_urlsafe(32)
     return raw, digest_token(raw)
+
+
+def create_one_time_token() -> tuple[str, str]:
+    """Return a random one-time token and its digest for persistence."""
+    raw = secrets.token_urlsafe(32)
+    return raw, digest_token(raw)
+
+
+def reset_token_is_usable(
+    raw_token: str, stored_digest: str, expires_at: datetime, *, consumed_at: datetime | None
+) -> bool:
+    """Check reset token integrity, consumption state, and expiry without side effects."""
+    try:
+        token_digest = digest_token(raw_token)
+    except SessionCredentialError:
+        return False
+    return (
+        consumed_at is None
+        and expires_at > datetime.now(UTC)
+        and hmac.compare_digest(token_digest, stored_digest)
+    )
+
+
+def build_public_token_url(origin: str, path: str, raw_token: str) -> str:
+    """Build an absolute one-time URL from a validated public origin."""
+    parsed = urlsplit(origin)
+    if parsed.scheme != "https" or not parsed.netloc or parsed.path not in ("", "/"):
+        raise AuthenticationError("A secure public application origin is required.")
+    return f"{origin.rstrip('/')}{path}?{urlencode({'token': raw_token})}"
+
+
+def issue_password_reset(owner_id: int) -> str:
+    """Invalidate prior reset records and persist one fresh 30-minute credential."""
+    raw_token, token_digest = create_one_time_token()
+    with rx.session() as session:
+        prior_tokens = session.exec(
+            select(PasswordResetToken).where(
+                PasswordResetToken.owner_id == owner_id,
+                PasswordResetToken.consumed_at.is_(None),
+            )
+        ).all()
+        now = datetime.now(UTC)
+        for prior_token in prior_tokens:
+            prior_token.consumed_at = now
+            session.add(prior_token)
+        session.add(
+            PasswordResetToken(
+                owner_id=owner_id,
+                token_digest=token_digest,
+                expires_at=now + RESET_TTL,
+            )
+        )
+        session.commit()
+    return raw_token
+
+
+def consume_password_reset(raw_token: str, new_password: str) -> bool:
+    """Atomically consume a valid token, update credentials, and revoke all sessions."""
+    validate_password(new_password)
+    try:
+        token_digest = digest_token(raw_token)
+    except SessionCredentialError:
+        return False
+    with rx.session() as session:
+        reset_record = session.exec(
+            select(PasswordResetToken).where(PasswordResetToken.token_digest == token_digest)
+        ).first()
+        if reset_record is None or not reset_token_is_usable(
+            raw_token,
+            reset_record.token_digest,
+            reset_record.expires_at,
+            consumed_at=reset_record.consumed_at,
+        ):
+            return False
+        owner = session.get(OwnerAccount, reset_record.owner_id)
+        if owner is None:
+            return False
+        password_digest, password_salt = create_password_digest(new_password)
+        now = datetime.now(UTC)
+        owner.password_digest = password_digest
+        owner.password_salt = password_salt
+        reset_record.consumed_at = now
+        active_sessions = session.exec(
+            select(AuthSession).where(
+                AuthSession.owner_id == owner.id,
+                AuthSession.revoked_at.is_(None),
+            )
+        ).all()
+        for auth_session in active_sessions:
+            auth_session.revoked_at = now
+            session.add(auth_session)
+        session.add(owner)
+        session.add(reset_record)
+        session.commit()
+    return True
 
 
 def verify_session_credential(
