@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import reflex as rx
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
+from starlette.applications import Starlette
 from starlette.responses import JSONResponse
-
-import reflex as rx
+from starlette.routing import Route
 
 from takdora.config import get_settings
 from takdora.models import record_probe
@@ -56,6 +57,6 @@ def index() -> rx.Component:
 
 
 settings = get_settings()
-app = rx.App()
+health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
+app = rx.App(api_transformer=health_api)
 app.add_page(index, route="/", title="Takdora")
-app.api.add_api_route("/healthz", health_response, methods=["GET"])

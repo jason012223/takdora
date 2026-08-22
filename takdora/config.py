@@ -30,6 +30,11 @@ class Settings:
         if self.is_production and not self.api_url.startswith("https://"):
             raise ConfigurationError("API_URL must use HTTPS in production.")
 
+    @property
+    def sentry_environment(self) -> str:
+        """Return a non-sensitive tag suitable for error monitoring."""
+        return self.app_env
+
 
 def get_settings(environ: dict[str, str] | None = None) -> Settings:
     """Load configuration from an environment mapping without logging its values."""
