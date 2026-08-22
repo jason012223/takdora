@@ -18,7 +18,7 @@ jobs:
       - run: SYNTHETIC_DEMO_ENABLED=true docker compose up --build -d
       - run: docker compose -f compose.yaml -f compose.e2e.yaml run --rm e2e uv run pytest tests/e2e/test_foundation_smoke.py tests/e2e/test_marketing_smoke.py tests/e2e/test_portfolio_workflow_smoke.py tests/e2e/test_responsive_ui_smoke.py -q
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-failure-output
           path: |
