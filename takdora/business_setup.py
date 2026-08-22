@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import reflex as rx
+from sqlmodel import select
 
-from takdora.models import Business, OwnerAccount
+from takdora.models import Business, BusinessSlugRedirect, OwnerAccount
 from takdora.tenancy import WorkspaceAccessError, get_workspace_for_owner, require_owner
 
 _SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -41,6 +42,14 @@ class PublishReadiness:
 
     ready: bool
     missing_required: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SlugChange:
+    """Canonical address plus an optional prior address to retain as a redirect."""
+
+    canonical_slug: str
+    redirect_from: str | None
 
 
 def normalize_slug(value: str) -> str:
@@ -114,6 +123,16 @@ def evaluate_publish_readiness(
     return PublishReadiness(ready=not missing, missing_required=tuple(missing))
 
 
+def slug_change_plan(current_slug: str, next_slug: str, *, is_published: bool) -> SlugChange:
+    """Plan a canonical slug update without dropping a shared published address."""
+    canonical_slug = normalize_slug(next_slug)
+    previous_slug = normalize_slug(current_slug) if current_slug else ""
+    return SlugChange(
+        canonical_slug=canonical_slug,
+        redirect_from=previous_slug if is_published and previous_slug != canonical_slug else None,
+    )
+
+
 def save_profile(owner: OwnerAccount | None, profile: BusinessProfileInput) -> Business:
     """Autosave a validated profile to the one server-authorized workspace."""
     authorized_owner = require_owner(owner)
@@ -131,3 +150,38 @@ def save_profile(owner: OwnerAccount | None, profile: BusinessProfileInput) -> B
         session.commit()
         session.refresh(stored)
         return stored
+
+
+def change_business_slug(
+    owner: OwnerAccount | None, next_slug: str, *, is_published: bool
+) -> Business:
+    """Atomically reserve a published prior address before moving the canonical slug."""
+    authorized_owner = require_owner(owner)
+    with rx.session() as session:
+        business = session.exec(
+            select(Business)
+            .where(Business.creating_owner_id == authorized_owner.id)
+            .with_for_update()
+        ).first()
+        if business is None:
+            raise WorkspaceAccessError("Workspace not found.")
+        change = slug_change_plan(business.slug, next_slug, is_published=is_published)
+        existing_business = session.exec(
+            select(Business).where(
+                Business.slug == change.canonical_slug, Business.id != business.id
+            )
+        ).first()
+        existing_redirect = session.exec(
+            select(BusinessSlugRedirect).where(BusinessSlugRedirect.slug == change.canonical_slug)
+        ).first()
+        if existing_business is not None or existing_redirect is not None:
+            raise ValueError("That public address is already in use.")
+        if change.redirect_from:
+            session.add(
+                BusinessSlugRedirect(business_id=business.id or 0, slug=change.redirect_from)
+            )
+        business.slug = change.canonical_slug
+        session.add(business)
+        session.commit()
+        session.refresh(business)
+        return business
