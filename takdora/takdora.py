@@ -6,6 +6,7 @@ import reflex as rx
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
@@ -28,7 +29,7 @@ class FoundationState(rx.State):
             self.probe_result = f"Database readiness confirmed (probe #{probe.id})."
 
 
-def health_response() -> JSONResponse:
+def health_response(_request: Request | None = None) -> JSONResponse:
     """Return a bounded, credential-free PostgreSQL readiness response."""
     try:
         with rx.session() as session:
