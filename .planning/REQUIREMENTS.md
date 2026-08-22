@@ -14,18 +14,18 @@
 
 ### Accounts and Tenancy
 
-- [ ] **AUTH-01**: A business owner can create an account with an email address and password.
-- [ ] **AUTH-02**: A business owner can log in, log out, and remain authenticated across browser refreshes.
-- [ ] **AUTH-03**: A business owner can reset a forgotten password through an email link.
-- [ ] **TEN-01**: A business owner can create and access their own business workspace.
-- [ ] **TEN-02**: A business owner cannot view, modify, download, or enumerate another business's private data.
+- [x] **AUTH-01**: A business owner can create an account with an email address and password.
+- [x] **AUTH-02**: A business owner can log in, log out, and remain authenticated across browser refreshes.
+- [x] **AUTH-03**: A business owner can reset a forgotten password through an email link.
+- [x] **TEN-01**: A business owner can create and access their own business workspace.
+- [x] **TEN-02**: A business owner cannot view, modify, download, or enumerate another business's private data.
 
 ### Business Setup
 
-- [ ] **BIZ-01**: A business owner can set the business name, contact details, address, public URL slug, logo, and accent color.
-- [ ] **BIZ-02**: A business owner can set the business time zone and currency, with `Asia/Manila` and PHP as defaults.
-- [ ] **BIZ-03**: A business owner can configure the invoice identity fields displayed on newly issued invoices.
-- [ ] **BIZ-04**: A business owner can see a setup checklist showing which essentials are required before publishing their booking page.
+- [x] **BIZ-01**: A business owner can set the business name, contact details, address, public URL slug, logo, and accent color.
+- [x] **BIZ-02**: A business owner can set the business time zone and currency, with `Asia/Manila` and PHP as defaults.
+- [x] **BIZ-03**: A business owner can configure the invoice identity fields displayed on newly issued invoices.
+- [x] **BIZ-04**: A business owner can see a setup checklist showing which essentials are required before publishing their booking page.
 
 ### Services and Availability
 
@@ -111,15 +111,15 @@
 | FOUND-02 | Phase 1 | Pending |
 | FOUND-03 | Phase 1 | Pending |
 | UI-01 | Phase 01.1 | Complete |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| TEN-01 | Phase 2 | Pending |
-| TEN-02 | Phase 2 | Pending |
-| BIZ-01 | Phase 2 | Pending |
-| BIZ-02 | Phase 2 | Pending |
-| BIZ-03 | Phase 2 | Pending |
-| BIZ-04 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
+| AUTH-03 | Phase 2 | Complete |
+| TEN-01 | Phase 2 | Complete |
+| TEN-02 | Phase 2 | Complete |
+| BIZ-01 | Phase 2 | Complete |
+| BIZ-02 | Phase 2 | Complete |
+| BIZ-03 | Phase 2 | Complete |
+| BIZ-04 | Phase 2 | Complete |
 | SERV-01 | Phase 3 | Pending |
 | AVAIL-01 | Phase 3 | Pending |
 | AVAIL-02 | Phase 3 | Pending |
