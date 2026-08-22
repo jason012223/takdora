@@ -17,6 +17,7 @@ class Settings:
     api_url: str
     app_secret_key: str | None
     sentry_dsn: str | None
+    release: str | None
 
     @property
     def is_production(self) -> bool:
@@ -35,6 +36,26 @@ class Settings:
         """Return a non-sensitive tag suitable for error monitoring."""
         return self.app_env
 
+    def initialize_sentry(self) -> None:
+        """Enable error monitoring only when an operator supplied a DSN.
+
+        Customer data is intentionally not added as tags or request context.
+        Sentry's default PII filtering remains enabled by explicitly opting out
+        of SDK-side PII collection.
+        """
+        if not self.sentry_dsn:
+            return
+
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=self.sentry_dsn,
+            environment=self.sentry_environment,
+            release=self.release,
+            send_default_pii=False,
+            traces_sample_rate=0.0,
+        )
+
 
 def get_settings(environ: dict[str, str] | None = None) -> Settings:
     """Load configuration from an environment mapping without logging its values."""
@@ -47,6 +68,7 @@ def get_settings(environ: dict[str, str] | None = None) -> Settings:
         api_url=env.get("API_URL", "http://localhost:8000"),
         app_secret_key=env.get("APP_SECRET_KEY"),
         sentry_dsn=env.get("SENTRY_DSN"),
+        release=env.get("RENDER_GIT_COMMIT") or env.get("APP_RELEASE"),
     )
     settings.validate()
     return settings

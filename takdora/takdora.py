@@ -58,6 +58,7 @@ def index() -> rx.Component:
 
 
 settings = get_settings()
+settings.initialize_sentry()
 health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
 app = rx.App(api_transformer=health_api)
 app.add_page(index, route="/", title="Takdora")
