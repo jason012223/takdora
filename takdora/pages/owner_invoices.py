@@ -47,7 +47,10 @@ class OwnerInvoicesState(AuthState):
     is_synthetic_demo: bool = False
 
     def _id_from_route(self) -> str:
-        route_id = self.router_data.get("invoice_id", "")
+        # Dynamic route parameters live on Reflex's router state. `router_data`
+        # only contains compatibility data and omits /[invoice_id] on current
+        # Reflex versions, which made a valid draft appear missing.
+        route_id = self.router._page.params.get("invoice_id", "")
         return str(route_id) if route_id else self.selected_invoice_id
 
     def load_invoice(self) -> rx.event.EventSpec | None:
@@ -127,12 +130,14 @@ class OwnerInvoicesState(AuthState):
         self.message = result.message
         if result.outcome == "saved":
             self.load_invoice()
+            self.message = result.message
 
     def confirm_issue(self) -> None:
         result = issue_invoice(self.require_owner(), self.selected_invoice_id)
         self.message, self.issue_open = result.message, False
         if result.invoice_id:
             self.load_invoice()
+            self.message = result.message
 
     def save_payment(self) -> None:
         result = set_received_total(
@@ -141,6 +146,7 @@ class OwnerInvoicesState(AuthState):
         self.message = result.message
         if result.invoice_id:
             self.load_invoice()
+            self.message = result.message
 
     def download_pdf(self) -> rx.event.EventSpec | None:
         self.require_owner()

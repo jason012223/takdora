@@ -107,6 +107,14 @@ def _text(value: object, field: str, maximum: int, *, required: bool = False) ->
     return text
 
 
+def _next_invoice_number(next_number: int, existing_numbers: set[str]) -> tuple[str, int]:
+    """Choose the next unused simple number and return the following sequence."""
+    candidate = max(1, next_number)
+    while f"INV-{candidate:04d}" in existing_numbers:
+        candidate += 1
+    return f"INV-{candidate:04d}", candidate + 1
+
+
 def calculate_totals(
     lines: list[dict[str, object]], taxes: list[dict[str, object]]
 ) -> tuple[
@@ -417,8 +425,14 @@ def issue_invoice(owner: OwnerAccount | None, invoice_id: int | str) -> InvoiceR
             sequence = InvoiceSequence(business_id=business.id or 0)
             session.add(sequence)
             session.flush()
-        number = f"INV-{sequence.next_number:04d}"
-        sequence.next_number += 1
+        existing_numbers = {
+            value
+            for value in session.exec(
+                select(Invoice.invoice_number).where(Invoice.business_id == business.id)
+            ).all()
+            if value
+        }
+        number, sequence.next_number = _next_invoice_number(sequence.next_number, existing_numbers)
         invoice.invoice_number, invoice.state, invoice.issued_at = (
             number,
             "issued",
