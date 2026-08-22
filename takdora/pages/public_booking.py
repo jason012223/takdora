@@ -25,16 +25,19 @@ class PublicBookingState(rx.State):
     business_timezone: str = "Asia/Manila"
     browser_timezone: str = ""
     timezone_label: str = ""
-    services: list[str] = []
-    slots: list[str] = []
+    services: list[dict[str, str]] = []
+    slots: list[dict[str, str]] = []
     selected_service_id: str = ""
+    selected_service_label: str = ""
     selected_slot: str = ""
+    selected_slot_label: str = ""
     customer_name: str = ""
     customer_email: str = ""
     customer_phone: str = ""
     customer_note: str = ""
     honeypot: str = ""
     booking_message: str = ""
+    booking_message_kind: str = "warning"
     idempotency_key: str = ""
     booking_complete: bool = False
     confirmed_service: str = ""
@@ -49,17 +52,25 @@ class PublicBookingState(rx.State):
             return rx.redirect(f"/b/{result.redirect_slug}")
         if result.business is None:
             self.booking_message = "This booking page is unavailable."
+            self.booking_message_kind = "error"
             return None
         self.business_name = result.business.name
         self.contact_route = result.business.contact_email or result.business.contact_phone
         self.business_timezone = result.business.timezone
         self.timezone_label = result.business.timezone
-        self.services = [
+        _legacy_service_labels = [
             f"{item.id}: {item.name} · {item.duration_label} · {item.price_label}"
             for item in result.business.services
         ]
+        self.services = [
+            {
+                "id": str(item.id),
+                "label": f"{item.name} · {item.duration_label} · {item.price_label}",
+            }
+            for item in result.business.services
+        ]
         if self.services and not self.selected_service_id:
-            self.selected_service_id = self.services[0]
+            self.select_service(self.services[0]["id"])
         if not self.idempotency_key:
             self.idempotency_key = secrets.token_urlsafe(32)
         return rx.call_script(
@@ -70,25 +81,48 @@ class PublicBookingState(rx.State):
     def set_browser_timezone(self, timezone_name: str) -> None:
         self.browser_timezone = timezone_name
         self.timezone_label = timezone_name or self.business_timezone
+        if self.selected_service_id:
+            self.load_slots()
+
+    def select_service(self, service_id: str) -> None:
+        """Retain a safe server ID while showing customers only a service label."""
+        self.selected_service_id = service_id
+        self.selected_service_label = next(
+            (item["label"] for item in self.services if item["id"] == service_id), ""
+        )
+        self.selected_slot = ""
+        self.selected_slot_label = ""
+        self.load_slots()
+
+    def select_slot(self, slot_start_utc: str) -> None:
+        self.selected_slot = slot_start_utc
+        self.selected_slot_label = next(
+            (item["label"] for item in self.slots if item["id"] == slot_start_utc), ""
+        )
 
     def load_slots(self) -> None:
         if not self.selected_service_id:
             self.booking_message = "Choose a service to see available times."
+            self.booking_message_kind = "warning"
             return
         try:
             results = public_slots_for_day(
                 self.business_slug,
-                int(self.selected_service_id.split(":", maxsplit=1)[0]),
+                int(self.selected_service_id),
                 date.today(),
                 self.browser_timezone,
             )
         except (PublicBookingUnavailable, ValueError):
             self.slots = []
             self.booking_message = "No times are available for that day."
+            self.booking_message_kind = "warning"
             return
         display_zone = self.browser_timezone or self.business_timezone
         self.slots = [
-            f"{item.start_at_utc.isoformat()} | {format_slot_for_timezone(item, display_zone)[0]}"
+            {
+                "id": item.start_at_utc.isoformat(),
+                "label": format_slot_for_timezone(item, display_zone)[0],
+            }
             for item in results
         ]
         self.booking_message = (
@@ -96,6 +130,7 @@ class PublicBookingState(rx.State):
             if self.slots
             else "No times are available for that day."
         )
+        self.booking_message_kind = "success" if self.slots else "warning"
 
     def submit_booking(self) -> None:
         self.name_error = ""
@@ -106,15 +141,17 @@ class PublicBookingState(rx.State):
             self.email_error = "Enter a valid email address."
         if self.name_error or self.email_error:
             self.booking_message = "Check the highlighted details and try again."
+            self.booking_message_kind = "error"
             return
         if not self.selected_slot or not self.selected_service_id:
             self.booking_message = "Choose a service and available time."
+            self.booking_message_kind = "warning"
             return
         result = create_public_booking(
             BookingRequest(
                 slug=self.business_slug,
-                service_id=self.selected_service_id.split(":", maxsplit=1)[0],
-                slot_start_utc=self.selected_slot.split(" | ", maxsplit=1)[0],
+                service_id=self.selected_service_id,
+                slot_start_utc=self.selected_slot,
                 idempotency_key=self.idempotency_key,
                 customer_name=self.customer_name,
                 customer_email=self.customer_email,
@@ -126,18 +163,37 @@ class PublicBookingState(rx.State):
         )
         if result.outcome == "slot_taken":
             self.selected_slot = ""
+            self.selected_slot_label = ""
             self.idempotency_key = secrets.token_urlsafe(32)
             self.booking_message = "That time was just taken. Choose another available time."
+            self.booking_message_kind = "warning"
             self.load_slots()
             return
         if result.outcome != "booked" or result.booking_id is None:
             self.booking_message = result.message
+            self.booking_message_kind = "error"
             return
         self.booking_complete = True
-        self.confirmed_service = self.selected_service_id.split(": ", maxsplit=1)[-1]
-        self.confirmed_time = self.selected_slot.split(" | ", maxsplit=1)[-1]
+        self.confirmed_service = self.selected_service_label
+        self.confirmed_time = self.selected_slot_label
         self.email_delivery = dispatch_confirmation(result.booking_id)
         self.booking_message = "Booking confirmed."
+        self.booking_message_kind = "success"
+
+
+def _booking_feedback() -> rx.Component:
+    return rx.cond(
+        PublicBookingState.booking_message_kind == "success",
+        feedback(PublicBookingState.booking_message, kind="success"),
+        rx.cond(
+            PublicBookingState.booking_message_kind == "error",
+            feedback(PublicBookingState.booking_message, kind="error"),
+            rx.cond(
+                PublicBookingState.booking_message != "",
+                feedback(PublicBookingState.booking_message, kind="warning"),
+            ),
+        ),
+    )
 
 
 def public_booking_page() -> rx.Component:
@@ -149,26 +205,49 @@ def public_booking_page() -> rx.Component:
             rx.form(
                 rx.vstack(
                     rx.el.label("Service", html_for="public-service"),
-                    rx.select(
-                        PublicBookingState.services,
+                    rx.select.root(
+                        rx.select.trigger(id="public-service", width="100%"),
+                        rx.select.content(
+                            rx.foreach(
+                                PublicBookingState.services,
+                                lambda service: rx.select.item(
+                                    service["label"], value=service["id"]
+                                ),
+                            )
+                        ),
                         value=PublicBookingState.selected_service_id,
-                        on_change=PublicBookingState.set_selected_service_id,
-                        id="public-service",
-                    ),
-                    rx.button(
-                        "Show available times",
-                        type="button",
-                        on_click=PublicBookingState.load_slots,
+                        on_change=PublicBookingState.select_service,
                     ),
                     rx.el.label("Available time", html_for="public-slot"),
-                    rx.select(
-                        PublicBookingState.slots,
+                    rx.select.root(
+                        rx.select.trigger(
+                            id="public-slot", width="100%", placeholder="Choose a time"
+                        ),
+                        rx.select.content(
+                            rx.foreach(
+                                PublicBookingState.slots,
+                                lambda slot: rx.select.item(slot["label"], value=slot["id"]),
+                            )
+                        ),
                         value=PublicBookingState.selected_slot,
-                        on_change=PublicBookingState.set_selected_slot,
-                        id="public-slot",
+                        on_change=PublicBookingState.select_slot,
                     ),
                     rx.text(
                         "Times are shown in your time zone: ", PublicBookingState.timezone_label
+                    ),
+                    rx.cond(
+                        PublicBookingState.selected_slot != "",
+                        rx.card(
+                            rx.vstack(
+                                rx.text("Your appointment", size="2", weight="medium"),
+                                rx.text(PublicBookingState.selected_service_label, weight="medium"),
+                                rx.text(PublicBookingState.selected_slot_label),
+                                rx.text("Review these details before booking.", size="2"),
+                                align="start",
+                                spacing="1",
+                            ),
+                            width="100%",
+                        ),
                     ),
                     rx.el.label("Your name", html_for="customer-name"),
                     rx.input(
@@ -218,10 +297,7 @@ def public_booking_page() -> rx.Component:
                         size="2",
                     ),
                     rx.button("Book appointment", type="submit"),
-                    rx.cond(
-                        PublicBookingState.booking_message != "",
-                        feedback(PublicBookingState.booking_message, kind="warning"),
-                    ),
+                    _booking_feedback(),
                     spacing="3",
                     width="100%",
                 ),
