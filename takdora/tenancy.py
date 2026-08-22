@@ -38,6 +38,12 @@ def require_business_for_owner(owner_id: int, business: WorkspaceRecord) -> Work
     return business
 
 
+def display_safe_business_profile(owner_id: int, business: WorkspaceRecord) -> dict[str, str]:
+    """Return only display-safe fields after the tenant guard has succeeded."""
+    authorized_business = require_business_for_owner(owner_id, business)
+    return {"name": authorized_business.name}
+
+
 def create_workspace(owner: OwnerAccount) -> Business:
     """Create exactly one draft workspace and its owner authority record."""
     authorized_owner = require_owner(owner)
