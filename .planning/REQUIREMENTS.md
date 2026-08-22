@@ -10,6 +10,7 @@
 - [ ] **FOUND-01**: A visitor can use Takdora as a responsive web application on desktop and mobile browsers.
 - [ ] **FOUND-02**: An operator can deploy Takdora with PostgreSQL, environment-based secrets, and production-safe Django settings.
 - [ ] **FOUND-03**: An operator can run automated linting and tests before deployment.
+- [ ] **UI-01**: Takdora provides a reusable, accessible Reflex/Radix UI foundation for responsive public, owner, and marketing surfaces.
 
 ### Accounts and Tenancy
 
@@ -109,6 +110,7 @@
 | FOUND-01 | Phase 8 | Pending |
 | FOUND-02 | Phase 1 | Pending |
 | FOUND-03 | Phase 1 | Pending |
+| UI-01 | Phase 01.1 | Pending |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |
@@ -147,8 +149,8 @@
 | REL-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 39 total
-- Mapped to phases: 39
+- v1 requirements: 40 total
+- Mapped to phases: 40
 - Unmapped: 0
 
 ---

@@ -42,14 +42,16 @@ Plans:
 
 ### Phase 01.1: Reflex UI Foundation and Design System (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Public, owner, and marketing surfaces share an accessible, responsive, non-generic Takdora UI foundation built with Reflex and Radix components.
+**Requirements**: UI-01
 **Depends on:** Phase 1
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 01.1 to break down)
+- [ ] 01.1-01-PLAN.md — Establish the Takdora theme, global styling, and rendered foundation shell.
+- [ ] 01.1-02-PLAN.md — Deliver reusable form, feedback, status, card, and table primitives with a component gallery.
+- [ ] 01.1-03-PLAN.md — Add responsive public/owner layouts, dialog/calendar primitives, and browser coverage.
 
 ### Phase 2: Owner Workspaces and Business Setup
 
@@ -163,7 +165,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+**Execution Order:** Phases execute in numeric order: 1 -> 01.1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
