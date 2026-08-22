@@ -17,6 +17,7 @@ from takdora.pages.auth import register_page, request_reset_page, reset_password
 from takdora.pages.availability import AvailabilityState, availability_page
 from takdora.pages.design_system import design_system
 from takdora.pages.onboarding import onboarding_page
+from takdora.pages.owner_bookings import OwnerBookingsState, owner_bookings_page
 from takdora.pages.owner_dashboard import OwnerDashboardState, owner_dashboard
 from takdora.pages.public_booking import PublicBookingState, privacy_page, public_booking_page
 from takdora.pages.services import ServicesState, services_page
@@ -93,6 +94,12 @@ app.add_page(
     route="/owner",
     title="Your Takdora workspace",
     on_load=OwnerDashboardState.load_dashboard,
+)
+app.add_page(
+    owner_bookings_page,
+    route="/owner/bookings",
+    title="Manage bookings",
+    on_load=OwnerBookingsState.load_bookings,
 )
 app.add_page(onboarding_page, route="/owner/setup", title="Set up your Takdora business")
 app.add_page(

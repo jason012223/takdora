@@ -188,6 +188,39 @@ class BookingConfirmationOutbox(rx.Model, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class BookingOperationAudit(rx.Model, table=True):
+    """Immutable internal evidence for a deliberate owner booking change."""
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    booking_id: int = Field(foreign_key="booking.id", index=True)
+    actor_owner_id: int = Field(foreign_key="owneraccount.id", index=True)
+    action: str = Field(max_length=32)
+    prior_status: str = Field(max_length=16)
+    new_status: str = Field(max_length=16)
+    audit_details: str = Field(default="", max_length=1000)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BookingChangeOutbox(rx.Model, table=True):
+    """A post-commit customer update, unique per booking action type."""
+
+    __table_args__ = (
+        UniqueConstraint("booking_id", "message_type", name="uq_booking_change_message"),
+    )
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    booking_id: int = Field(foreign_key="booking.id", index=True)
+    message_type: str = Field(max_length=32)
+    recipient_email: str
+    customer_message: str | None = Field(default=None, max_length=500)
+    delivery_status: str = Field(default="pending", index=True)
+    attempts: int = Field(default=0)
+    last_error: str | None = Field(default=None, max_length=240)
+    sent_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 def record_probe() -> FoundationProbe:
     """Persist then retrieve a diagnostic row using Reflex's configured database session."""
     with rx.session() as session:
