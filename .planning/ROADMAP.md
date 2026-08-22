@@ -89,8 +89,14 @@ Plans:
   3. A business owner can set lead time, booking horizon, slot interval, and a buffer between bookings.
   4. The availability view shows only times calculated from the active service, configured time zone, hours, closures, and booking rules.
 
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+
+- [ ] 03-01-PLAN.md — Build the tenant-safe service catalog and publishing-readiness service contract.
+- [ ] 03-02-PLAN.md — Persist weekly hours, closures, booking rules, and the accessible visual schedule editor.
+- [ ] 03-03-PLAN.md — Calculate authoritative availability and render the privacy-safe owner week preview.
 
 ### Phase 4: Safe Public Booking
 
