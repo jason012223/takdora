@@ -12,6 +12,7 @@ __pycache__/
 reflex.lock/
 playwright-report/
 test-results/
+portfolio-evidence/
 coverage.xml
 .coverage
 htmlcov/
