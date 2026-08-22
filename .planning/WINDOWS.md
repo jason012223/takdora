@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 4
 waived_count: 0
 fixed_count: 0
-total_count: 3
-last_updated: 2026-08-22T06:56:44.675Z
+total_count: 4
+last_updated: 2026-08-22T07:08:23.998Z
 ---
 
 # Broken Windows Ledger
@@ -18,6 +18,7 @@ last_updated: 2026-08-22T06:56:44.675Z
 | 1 | 01.1 | unrun-verify | tests/e2e/test_design_system_smoke.py |  | Compose-backed Playwright verification was unrun because Reflex did not expose local HTTP ports after compilation. | open |  | 2026-08-22T06:37:58.464Z |  |
 | 2 | 01.1 | unrun-verify | tests/e2e/test_responsive_ui_smoke.py |  | Compose-backed Playwright verification was unrun because Reflex did not expose local HTTP ports after compilation. | open |  | 2026-08-22T06:37:59.674Z |  |
 | 3 | 02 | stub | takdora/business_setup.py |  | Public redirect resolution and service/hours records are intentionally owned by later phases. | open |  | 2026-08-22T06:56:44.675Z |  |
+| 4 | 03 | unrun-verify | takdora/pages/availability.py |  | Owner availability drag-and-drop and preview browser verification was unrun because no Compose app port is available. | open |  | 2026-08-22T07:08:23.998Z |  |
 
 ````json
 [
@@ -55,6 +56,18 @@ last_updated: 2026-08-22T06:56:44.675Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-22T06:56:44.675Z",
+    "resolved_at": null
+  },
+  {
+    "id": 4,
+    "kind": "unrun-verify",
+    "phase": "03",
+    "file": "takdora/pages/availability.py",
+    "line": null,
+    "description": "Owner availability drag-and-drop and preview browser verification was unrun because no Compose app port is available.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-22T07:08:23.998Z",
     "resolved_at": null
   }
 ]
