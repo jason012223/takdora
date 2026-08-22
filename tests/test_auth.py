@@ -33,7 +33,9 @@ def test_session_credentials_are_opaque_and_expire_or_revoke_server_side() -> No
     assert raw != digest
     assert verify_session_credential(raw, digest, datetime.now(UTC) + timedelta(hours=1))
     assert not verify_session_credential(raw, digest, datetime.now(UTC) - timedelta(seconds=1))
-    assert not verify_session_credential(raw, digest, datetime.now(UTC) + timedelta(hours=1), revoked=True)
+    assert not verify_session_credential(
+        raw, digest, datetime.now(UTC) + timedelta(hours=1), revoked=True
+    )
 
 
 @pytest.mark.parametrize("credential", ["", "malformed", "x" * 10])
