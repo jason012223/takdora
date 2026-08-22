@@ -8,6 +8,7 @@ import reflex as rx
 
 from takdora.public_booking import (
     PublicBookingUnavailable,
+    format_slot_for_timezone,
     public_slots_for_day,
     resolve_public_business,
 )
@@ -50,7 +51,8 @@ class PublicBookingState(rx.State):
         if self.services and not self.selected_service_id:
             self.selected_service_id = self.services[0]
         return rx.call_script(
-            "window.takdoraPublicBookingTimezone && window.takdoraPublicBookingTimezone()"
+            "window.takdoraPublicBookingTimezone && window.takdoraPublicBookingTimezone()",
+            callback=PublicBookingState.set_browser_timezone,
         )
 
     def set_browser_timezone(self, timezone_name: str) -> None:
@@ -72,7 +74,11 @@ class PublicBookingState(rx.State):
             self.slots = []
             self.booking_message = "No times are available for that day."
             return
-        self.slots = [f"{item.start_at_utc.isoformat()} | {item.local_label}" for item in results]
+        display_zone = self.browser_timezone or self.business_timezone
+        self.slots = [
+            f"{item.start_at_utc.isoformat()} | {format_slot_for_timezone(item, display_zone)[0]}"
+            for item in results
+        ]
         self.booking_message = (
             "Choose a time that works for you."
             if self.slots
