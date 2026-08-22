@@ -19,10 +19,12 @@ def test_public_page_maps_success_and_conflict_without_clearing_customer_fields(
     assert "Your booking is confirmed" in source
 
 
-def test_public_page_uses_hidden_select_values_and_an_explicit_review_summary() -> None:
+def test_public_page_maps_display_labels_to_private_values_and_an_explicit_review_summary() -> None:
     source = open("takdora/pages/public_booking.py", encoding="utf-8").read()
-    assert '"label": f"{item.name}' in source
-    assert '"id": str(item.id)' in source
+    assert "self.service_ids =" in source
+    assert "self.slot_starts =" in source
+    assert "self.selected_service_id = self.service_ids.get" in source
+    assert "self.selected_slot = self.slot_starts.get" in source
     assert "Show available times" not in source
     assert "on_change=PublicBookingState.select_service" in source
     assert "Your appointment" in source
