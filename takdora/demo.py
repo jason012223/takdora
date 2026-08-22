@@ -99,6 +99,10 @@ def reset_synthetic_demo(settings: Settings) -> Business:
             )
         ).all():
             _delete_fixture_rows(session, existing.id or 0)
+            # The membership table has an explicit foreign key but no ORM
+            # relationship cascade. Flush its removal before deleting the
+            # synthetic business so a reset remains repeatable.
+            session.flush()
             session.delete(existing)
         session.flush()
         business = Business(
