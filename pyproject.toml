@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A configurable booking and invoice hub for Philippine service businesses."
 requires-python = ">=3.13"
 dependencies = [
-  "reflex[db]>=0.8.0,<0.9.0",
+  "reflex[db]>=0.8.0,<0.10.0",
   "psycopg[binary]>=3.2,<4.0",
   "sentry-sdk>=2.0,<3.0",
   "reportlab>=4.4,<5.0",
