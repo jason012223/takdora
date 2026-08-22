@@ -25,8 +25,10 @@ class PublicBookingState(rx.State):
     business_timezone: str = "Asia/Manila"
     browser_timezone: str = ""
     timezone_label: str = ""
-    services: list[dict[str, str]] = []
-    slots: list[dict[str, str]] = []
+    services: list[str] = []
+    service_ids: dict[str, str] = {}
+    slots: list[str] = []
+    slot_starts: dict[str, str] = {}
     selected_service_id: str = ""
     selected_service_label: str = ""
     selected_slot: str = ""
@@ -58,19 +60,16 @@ class PublicBookingState(rx.State):
         self.contact_route = result.business.contact_email or result.business.contact_phone
         self.business_timezone = result.business.timezone
         self.timezone_label = result.business.timezone
-        _legacy_service_labels = [
-            f"{item.id}: {item.name} · {item.duration_label} · {item.price_label}"
-            for item in result.business.services
-        ]
         self.services = [
-            {
-                "id": str(item.id),
-                "label": f"{item.name} · {item.duration_label} · {item.price_label}",
-            }
+            f"{item.name} · {item.duration_label} · {item.price_label}"
             for item in result.business.services
         ]
-        if self.services and not self.selected_service_id:
-            self.select_service(self.services[0]["id"])
+        self.service_ids = {
+            f"{item.name} · {item.duration_label} · {item.price_label}": str(item.id)
+            for item in result.business.services
+        }
+        if self.services and not self.selected_service_label:
+            self.select_service(self.services[0])
         if not self.idempotency_key:
             self.idempotency_key = secrets.token_urlsafe(32)
         return rx.call_script(
@@ -84,21 +83,17 @@ class PublicBookingState(rx.State):
         if self.selected_service_id:
             self.load_slots()
 
-    def select_service(self, service_id: str) -> None:
+    def select_service(self, service_label: str) -> None:
         """Retain a safe server ID while showing customers only a service label."""
-        self.selected_service_id = service_id
-        self.selected_service_label = next(
-            (item["label"] for item in self.services if item["id"] == service_id), ""
-        )
+        self.selected_service_label = service_label
+        self.selected_service_id = self.service_ids.get(service_label, "")
         self.selected_slot = ""
         self.selected_slot_label = ""
         self.load_slots()
 
-    def select_slot(self, slot_start_utc: str) -> None:
-        self.selected_slot = slot_start_utc
-        self.selected_slot_label = next(
-            (item["label"] for item in self.slots if item["id"] == slot_start_utc), ""
-        )
+    def select_slot(self, slot_label: str) -> None:
+        self.selected_slot_label = slot_label
+        self.selected_slot = self.slot_starts.get(slot_label, "")
 
     def load_slots(self) -> None:
         if not self.selected_service_id:
@@ -118,13 +113,11 @@ class PublicBookingState(rx.State):
             self.booking_message_kind = "warning"
             return
         display_zone = self.browser_timezone or self.business_timezone
-        self.slots = [
-            {
-                "id": item.start_at_utc.isoformat(),
-                "label": format_slot_for_timezone(item, display_zone)[0],
-            }
+        self.slots = [format_slot_for_timezone(item, display_zone)[0] for item in results]
+        self.slot_starts = {
+            format_slot_for_timezone(item, display_zone)[0]: item.start_at_utc.isoformat()
             for item in results
-        ]
+        }
         self.booking_message = (
             "Choose a time that works for you."
             if self.slots
@@ -205,32 +198,21 @@ def public_booking_page() -> rx.Component:
             rx.form(
                 rx.vstack(
                     rx.el.label("Service", html_for="public-service"),
-                    rx.select.root(
-                        rx.select.trigger(id="public-service", width="100%"),
-                        rx.select.content(
-                            rx.foreach(
-                                PublicBookingState.services,
-                                lambda service: rx.select.item(
-                                    service["label"], value=service["id"]
-                                ),
-                            )
-                        ),
-                        value=PublicBookingState.selected_service_id,
+                    rx.select(
+                        PublicBookingState.services,
+                        id="public-service",
+                        value=PublicBookingState.selected_service_label,
                         on_change=PublicBookingState.select_service,
+                        width="100%",
                     ),
                     rx.el.label("Available time", html_for="public-slot"),
-                    rx.select.root(
-                        rx.select.trigger(
-                            id="public-slot", width="100%", placeholder="Choose a time"
-                        ),
-                        rx.select.content(
-                            rx.foreach(
-                                PublicBookingState.slots,
-                                lambda slot: rx.select.item(slot["label"], value=slot["id"]),
-                            )
-                        ),
-                        value=PublicBookingState.selected_slot,
+                    rx.select(
+                        PublicBookingState.slots,
+                        id="public-slot",
+                        value=PublicBookingState.selected_slot_label,
                         on_change=PublicBookingState.select_slot,
+                        placeholder="Choose a time",
+                        width="100%",
                     ),
                     rx.text(
                         "Times are shown in your time zone: ", PublicBookingState.timezone_label
