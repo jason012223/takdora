@@ -9,6 +9,7 @@ from takdora.business_setup import (
     default_branding,
     evaluate_publish_readiness,
     normalize_slug,
+    slug_change_plan,
     validate_profile,
 )
 
@@ -44,3 +45,9 @@ def test_publish_readiness_names_each_missing_prerequisite() -> None:
     )
     assert readiness.ready is False
     assert readiness.missing_required == ("Verify email", "Add a service", "Set working hours")
+
+
+def test_published_slug_changes_keep_a_permanent_redirect_record() -> None:
+    change = slug_change_plan("luna-studio", "luna-wellness", is_published=True)
+    assert change.canonical_slug == "luna-wellness"
+    assert change.redirect_from == "luna-studio"
