@@ -57,6 +57,34 @@ class PasswordResetToken(rx.Model, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class Business(rx.Model, table=True):
+    """The single tenant root owned by one account in Takdora v1."""
+
+    __table_args__ = (UniqueConstraint("creating_owner_id", name="uq_business_creating_owner"),)
+
+    creating_owner_id: int = Field(foreign_key="owneraccount.id", index=True)
+    name: str = Field(default="")
+    slug: str = Field(default="", index=True)
+    is_active: bool = Field(default=True, index=True)
+    deletion_requested_at: datetime | None = Field(default=None)
+    purge_after: datetime | None = Field(default=None, index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BusinessMembership(rx.Model, table=True):
+    """Future-compatible authority record; v1 only creates the owner membership."""
+
+    __table_args__ = (
+        UniqueConstraint("business_id", "owner_id", name="uq_business_owner_membership"),
+        UniqueConstraint("owner_id", name="uq_one_workspace_per_owner"),
+    )
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    owner_id: int = Field(foreign_key="owneraccount.id", index=True)
+    role: str = Field(default="owner")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 def record_probe() -> FoundationProbe:
     """Persist then retrieve a diagnostic row using Reflex's configured database session."""
     with rx.session() as session:
