@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import reflex as rx
@@ -199,6 +200,29 @@ def change_business_slug(
                 BusinessSlugRedirect(business_id=business.id or 0, slug=change.redirect_from)
             )
         business.slug = change.canonical_slug
+        session.add(business)
+        session.commit()
+        session.refresh(business)
+        return business
+
+
+def publish_business(owner: OwnerAccount | None) -> Business:
+    """Expose a workspace only after rechecking readiness on the server."""
+    authorized_owner = require_owner(owner)
+    readiness = evaluate_publish_readiness_for_owner(authorized_owner)
+    if not readiness.ready:
+        raise ValueError(
+            "Complete setup before publishing: " + ", ".join(readiness.missing_required)
+        )
+    with rx.session() as session:
+        business = session.exec(
+            select(Business)
+            .where(Business.creating_owner_id == authorized_owner.id)
+            .with_for_update()
+        ).first()
+        if business is None or not business.is_active or business.deletion_requested_at is not None:
+            raise WorkspaceAccessError("Workspace cannot be published.")
+        business.published_at = datetime.now(UTC)
         session.add(business)
         session.commit()
         session.refresh(business)

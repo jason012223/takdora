@@ -18,6 +18,7 @@ from takdora.pages.availability import AvailabilityState, availability_page
 from takdora.pages.design_system import design_system
 from takdora.pages.onboarding import onboarding_page
 from takdora.pages.owner_dashboard import OwnerDashboardState, owner_dashboard
+from takdora.pages.public_booking import PublicBookingState, privacy_page, public_booking_page
 from takdora.pages.services import ServicesState, services_page
 from takdora.pages.ui_preview import ui_preview
 from takdora.ui.shell import application_shell
@@ -77,7 +78,11 @@ def index() -> rx.Component:
 settings = get_settings()
 settings.initialize_sentry()
 health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
-app = rx.App(api_transformer=health_api, theme=takdora_theme, stylesheets=["/takdora.css"])
+app = rx.App(
+    api_transformer=health_api,
+    theme=takdora_theme,
+    stylesheets=["/takdora.css"],
+)
 app.add_page(index, route="/", title="Takdora")
 app.add_page(design_system, route="/design-system", title="Takdora interface patterns")
 app.add_page(ui_preview, route="/ui-preview", title="Takdora responsive UI preview")
@@ -102,6 +107,13 @@ app.add_page(
     title="Set availability",
     on_load=AvailabilityState.load_availability,
 )
+app.add_page(
+    public_booking_page,
+    route="/b/[business_slug]",
+    title="Book with Takdora",
+    on_load=PublicBookingState.load_public_page,
+)
+app.add_page(privacy_page, route="/privacy", title="Takdora privacy")
 app.add_page(request_reset_page, route="/request-reset", title="Reset your Takdora password")
 app.add_page(
     reset_password_page,

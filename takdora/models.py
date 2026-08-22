@@ -75,6 +75,7 @@ class Business(rx.Model, table=True):
     accent_color: str | None = Field(default=None)
     invoice_identity: str = Field(default="")
     is_active: bool = Field(default=True, index=True)
+    published_at: datetime | None = Field(default=None, index=True)
     deletion_requested_at: datetime | None = Field(default=None)
     purge_after: datetime | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -150,6 +151,41 @@ class DateClosure(rx.Model, table=True):
     business_id: int = Field(foreign_key="business.id", index=True)
     local_date: date = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class Booking(rx.Model, table=True):
+    """A customer-safe appointment snapshot; all instants are stored as UTC."""
+
+    __table_args__ = (UniqueConstraint("business_id", "idempotency_key", name="uq_booking_key"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    service_id: int = Field(foreign_key="businessservice.id", index=True)
+    status: str = Field(default="scheduled", index=True)
+    customer_name: str
+    customer_email: str
+    customer_phone: str | None = Field(default=None)
+    customer_note: str | None = Field(default=None)
+    starts_at: datetime
+    ends_at: datetime
+    business_timezone: str
+    idempotency_key: str = Field(max_length=96)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BookingConfirmationOutbox(rx.Model, table=True):
+    """One durable, post-commit confirmation delivery record per booking."""
+
+    __table_args__ = (UniqueConstraint("booking_id", name="uq_booking_confirmation_booking"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    booking_id: int = Field(foreign_key="booking.id", index=True)
+    recipient_email: str
+    delivery_status: str = Field(default="pending", index=True)
+    attempts: int = Field(default=0)
+    last_error: str | None = Field(default=None, max_length=240)
+    sent_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 def record_probe() -> FoundationProbe:
