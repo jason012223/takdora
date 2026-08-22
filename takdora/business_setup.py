@@ -123,6 +123,24 @@ def evaluate_publish_readiness(
     return PublishReadiness(ready=not missing, missing_required=tuple(missing))
 
 
+def evaluate_publish_readiness_for_owner(owner: OwnerAccount | None) -> PublishReadiness:
+    """Read live catalog and schedule adapters instead of trusting onboarding browser state."""
+    from takdora.availability import has_weekly_working_hours_for_business
+    from takdora.services import active_service_present_for_business
+
+    authorized_owner = require_owner(owner)
+    business = get_workspace_for_owner(authorized_owner)
+    if business is None:
+        raise WorkspaceAccessError("Workspace not found.")
+    return evaluate_publish_readiness(
+        email_verified=authorized_owner.email_verified_at is not None,
+        business_name=business.name,
+        slug=business.slug,
+        has_active_service=active_service_present_for_business(business.id or 0),
+        has_working_hours=has_weekly_working_hours_for_business(business.id or 0),
+    )
+
+
 def slug_change_plan(current_slug: str, next_slug: str, *, is_published: bool) -> SlugChange:
     """Plan a canonical slug update without dropping a shared published address."""
     canonical_slug = normalize_slug(next_slug)

@@ -14,9 +14,11 @@ from takdora.auth import AuthState
 from takdora.config import get_settings
 from takdora.models import record_probe
 from takdora.pages.auth import register_page, request_reset_page, reset_password_page, sign_in_page
+from takdora.pages.availability import AvailabilityState, availability_page
 from takdora.pages.design_system import design_system
 from takdora.pages.onboarding import onboarding_page
 from takdora.pages.owner_dashboard import OwnerDashboardState, owner_dashboard
+from takdora.pages.services import ServicesState, services_page
 from takdora.pages.ui_preview import ui_preview
 from takdora.ui.shell import application_shell
 from takdora.ui.theme import TOKENS, takdora_theme
@@ -88,6 +90,18 @@ app.add_page(
     on_load=OwnerDashboardState.load_dashboard,
 )
 app.add_page(onboarding_page, route="/owner/setup", title="Set up your Takdora business")
+app.add_page(
+    services_page,
+    route="/owner/services",
+    title="Manage services",
+    on_load=ServicesState.load_services,
+)
+app.add_page(
+    availability_page,
+    route="/owner/availability",
+    title="Set availability",
+    on_load=AvailabilityState.load_availability,
+)
 app.add_page(request_reset_page, route="/request-reset", title="Reset your Takdora password")
 app.add_page(
     reset_password_page,

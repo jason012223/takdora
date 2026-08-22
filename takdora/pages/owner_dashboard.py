@@ -44,6 +44,11 @@ def owner_dashboard() -> rx.Component:
                 rx.heading("Your business workspace", size="7"),
                 rx.text(OwnerDashboardState.workspace_name),
                 rx.text("Continue setup to make your public page ready."),
+                rx.hstack(
+                    rx.link("Manage services", href="/owner/services"),
+                    rx.link("Set availability", href="/owner/availability"),
+                    spacing="4",
+                ),
                 spacing="3",
             ),
             empty_state(

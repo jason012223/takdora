@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 import reflex as rx
 from sqlmodel import select
 
-from takdora.models import Business, BusinessMembership, OwnerAccount
+from takdora.models import BookingRules, Business, BusinessMembership, OwnerAccount
 
 
 class WorkspaceAccessError(ValueError):
@@ -115,6 +115,7 @@ def create_workspace(owner: OwnerAccount) -> Business:
         session.add(
             BusinessMembership(business_id=business.id or 0, owner_id=authorized_owner.id or 0)
         )
+        session.add(BookingRules(business_id=business.id or 0))
         session.commit()
         session.refresh(business)
         return business

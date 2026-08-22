@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time
+from decimal import Decimal
 
 import reflex as rx
 from sqlalchemy import UniqueConstraint
@@ -100,6 +101,54 @@ class BusinessSlugRedirect(rx.Model, table=True):
 
     business_id: int = Field(foreign_key="business.id", index=True)
     slug: str = Field(index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BusinessService(rx.Model, table=True):
+    """A history-preserving, fixed-duration service offered by one business."""
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    name: str = Field(max_length=120)
+    description: str | None = Field(default=None, max_length=1000)
+    fixed_duration_minutes: int
+    price: Decimal | None = Field(default=None, max_digits=12, decimal_places=2)
+    is_active: bool = Field(default=True, index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class WeeklyAvailabilityBlock(rx.Model, table=True):
+    """A recurring local-time weekly policy block, never an appointment timestamp."""
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    weekday: int = Field(index=True)
+    start_time: time
+    end_time: time
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BookingRules(rx.Model, table=True):
+    """One explicit scheduling policy per business, seeded with low-friction defaults."""
+
+    __table_args__ = (UniqueConstraint("business_id", name="uq_booking_rules_business"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    slot_interval_minutes: int = Field(default=30)
+    minimum_lead_minutes: int = Field(default=60)
+    booking_horizon_days: int = Field(default=30)
+    buffer_minutes: int = Field(default=0)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class DateClosure(rx.Model, table=True):
+    """A complete local business date that cannot be booked; reasons are deliberately absent."""
+
+    __table_args__ = (UniqueConstraint("business_id", "local_date", name="uq_date_closure"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    local_date: date = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
