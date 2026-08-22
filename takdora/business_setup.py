@@ -35,6 +35,14 @@ class Branding:
     accent_color: str
 
 
+@dataclass(frozen=True)
+class PublishReadiness:
+    """One shared truth source for the review screen and future public route."""
+
+    ready: bool
+    missing_required: tuple[str, ...]
+
+
 def normalize_slug(value: str) -> str:
     """Create a short, URL-safe public identifier from an editable business name."""
     if not value.strip() or re.search(r"[!/:?@]", value):
@@ -79,6 +87,31 @@ def validate_profile(profile: BusinessProfileInput) -> BusinessProfileInput:
         accent_color=profile.accent_color,
         invoice_identity=profile.invoice_identity.strip(),
     )
+
+
+def evaluate_publish_readiness(
+    *,
+    email_verified: bool,
+    business_name: str,
+    slug: str,
+    has_active_service: bool,
+    has_working_hours: bool,
+) -> PublishReadiness:
+    """Report the exact requirements honestly before a public page can be published."""
+    missing: list[str] = []
+    if not email_verified:
+        missing.append("Verify email")
+    if not business_name.strip():
+        missing.append("Add business name")
+    try:
+        normalize_slug(slug)
+    except ValueError:
+        missing.append("Choose a public address")
+    if not has_active_service:
+        missing.append("Add a service")
+    if not has_working_hours:
+        missing.append("Set working hours")
+    return PublishReadiness(ready=not missing, missing_required=tuple(missing))
 
 
 def save_profile(owner: OwnerAccount | None, profile: BusinessProfileInput) -> Business:

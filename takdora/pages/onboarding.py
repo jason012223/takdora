@@ -43,4 +43,10 @@ def onboarding_page() -> rx.Component:
         ),
         rx.button("Save essentials", on_click=OnboardingState.save_essentials),
         rx.cond(OnboardingState.setup_message != "", feedback(OnboardingState.setup_message)),
+        rx.divider(),
+        rx.heading("Review before publishing", size="5"),
+        rx.text("Your future public address will be takdora.app/b/"),
+        rx.text(OnboardingState.slug),
+        rx.text("Required before publishing: verified email, a service, and working hours."),
+        rx.text("Optional polish: invoice identity, contact details, logo, and color."),
     )
