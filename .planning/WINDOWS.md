@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 4
+open_count: 6
 waived_count: 0
 fixed_count: 0
-total_count: 4
-last_updated: 2026-08-22T07:08:23.998Z
+total_count: 6
+last_updated: 2026-08-22T07:24:03.606Z
 ---
 
 # Broken Windows Ledger
@@ -19,6 +19,8 @@ last_updated: 2026-08-22T07:08:23.998Z
 | 2 | 01.1 | unrun-verify | tests/e2e/test_responsive_ui_smoke.py |  | Compose-backed Playwright verification was unrun because Reflex did not expose local HTTP ports after compilation. | open |  | 2026-08-22T06:37:59.674Z |  |
 | 3 | 02 | stub | takdora/business_setup.py |  | Public redirect resolution and service/hours records are intentionally owned by later phases. | open |  | 2026-08-22T06:56:44.675Z |  |
 | 4 | 03 | unrun-verify | takdora/pages/availability.py |  | Owner availability drag-and-drop and preview browser verification was unrun because no Compose app port is available. | open |  | 2026-08-22T07:08:23.998Z |  |
+| 5 | 04 | unrun-verify | tests/e2e/test_public_booking_smoke.py |  | Real browser smoke was not run because this Windows host cannot reach Compose browser ports. | open |  | 2026-08-22T07:24:02.360Z |  |
+| 6 | 04 | unrun-verify | tests/test_booking_postgres.py |  | Real PostgreSQL concurrency test was not run through the inaccessible Compose host port. | open |  | 2026-08-22T07:24:03.606Z |  |
 
 ````json
 [
@@ -68,6 +70,30 @@ last_updated: 2026-08-22T07:08:23.998Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-22T07:08:23.998Z",
+    "resolved_at": null
+  },
+  {
+    "id": 5,
+    "kind": "unrun-verify",
+    "phase": "04",
+    "file": "tests/e2e/test_public_booking_smoke.py",
+    "line": null,
+    "description": "Real browser smoke was not run because this Windows host cannot reach Compose browser ports.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-22T07:24:02.360Z",
+    "resolved_at": null
+  },
+  {
+    "id": 6,
+    "kind": "unrun-verify",
+    "phase": "04",
+    "file": "tests/test_booking_postgres.py",
+    "line": null,
+    "description": "Real PostgreSQL concurrency test was not run through the inaccessible Compose host port.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-22T07:24:03.606Z",
     "resolved_at": null
   }
 ]

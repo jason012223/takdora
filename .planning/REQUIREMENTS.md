@@ -36,13 +36,13 @@
 
 ### Public Booking
 
-- [ ] **BOOK-01**: A customer can visit a published business's public URL and view its active services and booking information without creating an account.
-- [ ] **BOOK-02**: A customer can choose a service and an actually available date/time from the public booking flow.
-- [ ] **BOOK-03**: A customer can submit their name, email, optional phone number, and booking notes with appropriate privacy notice.
-- [ ] **BOOK-04**: Takdora creates at most one appointment for a submission, including when a customer retries the request.
-- [ ] **BOOK-05**: Takdora prevents overlapping active bookings for the business's v1 booking capacity, including simultaneous attempts.
-- [ ] **BOOK-06**: A customer sees a clear success or error result after trying to book.
-- [ ] **NOTF-01**: A customer receives an email confirmation only after their booking is successfully saved.
+- [x] **BOOK-01**: A customer can visit a published business's public URL and view its active services and booking information without creating an account.
+- [x] **BOOK-02**: A customer can choose a service and an actually available date/time from the public booking flow.
+- [x] **BOOK-03**: A customer can submit their name, email, optional phone number, and booking notes with appropriate privacy notice.
+- [x] **BOOK-04**: Takdora creates at most one appointment for a submission, including when a customer retries the request.
+- [x] **BOOK-05**: Takdora prevents overlapping active bookings for the business's v1 booking capacity, including simultaneous attempts.
+- [x] **BOOK-06**: A customer sees a clear success or error result after trying to book.
+- [x] **NOTF-01**: A customer receives an email confirmation only after their booking is successfully saved.
 
 ### Owner Booking Operations
 
@@ -124,13 +124,13 @@
 | AVAIL-01 | Phase 3 | Pending |
 | AVAIL-02 | Phase 3 | Pending |
 | AVAIL-03 | Phase 3 | Pending |
-| BOOK-01 | Phase 4 | Pending |
-| BOOK-02 | Phase 4 | Pending |
-| BOOK-03 | Phase 4 | Pending |
-| BOOK-04 | Phase 4 | Pending |
-| BOOK-05 | Phase 4 | Pending |
-| BOOK-06 | Phase 4 | Pending |
-| NOTF-01 | Phase 4 | Pending |
+| BOOK-01 | Phase 4 | Complete |
+| BOOK-02 | Phase 4 | Complete |
+| BOOK-03 | Phase 4 | Complete |
+| BOOK-04 | Phase 4 | Complete |
+| BOOK-05 | Phase 4 | Complete |
+| BOOK-06 | Phase 4 | Complete |
+| NOTF-01 | Phase 4 | Complete |
 | OPS-01 | Phase 5 | Pending |
 | OPS-02 | Phase 5 | Pending |
 | OPS-03 | Phase 5 | Pending |

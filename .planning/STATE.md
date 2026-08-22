@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 1
 current_phase_name: Deployable Foundation
 status: planning
-stopped_at: Completed Phase 02 plans
-last_updated: "2026-08-22T06:56:29.455Z"
+stopped_at: Completed Phase 04 public booking plans
+last_updated: "2026-08-22T07:24:18.305Z"
 last_activity: 2026-08-22
 last_activity_desc: Created the MVP roadmap with full v1 requirement coverage.
-state_head: 38814fd74c04f409473151414afa0fb9037f1ab7
+state_head: f517b35f4c4403a53d57b8c885354f42846da44d
 progress:
   total_phases: 9
   completed_phases: 0
-  total_plans: 12
-  completed_plans: 9
+  total_plans: 18
+  completed_plans: 15
   percent: 0
 ---
 
@@ -63,6 +63,9 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P01 | execution | 3 tasks | 8 files |
 | Phase 02 P02 | execution | 3 tasks | 7 files |
 | Phase 02 P03 | execution | 3 tasks | 6 files |
+| Phase 04-safe-public-booking P01 | 38m | 2 tasks | 8 files |
+| Phase 04-safe-public-booking P02 | 29m | 2 tasks | 4 files |
+| Phase 04-safe-public-booking P03 | 31m | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -79,6 +82,8 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Phase 01.1: All gallery and preview content stays explicitly synthetic and identity-free.
 - [Phase 1]: Phase 2: owner accounts use digest-only sessions and one-time reset tokens.
 - [Phase 1]: Phase 2: every workspace lookup is derived from the authenticated owner.
+- [Phase 1]: Public browser time zones are display preferences only; booking authority stays UTC and server-calculated.
+- [Phase 1]: A confirmed booking survives delayed confirmation email delivery through a durable outbox.
 
 ### Pending Todos
 
@@ -104,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T06:56:29.424Z
-Stopped at: Completed Phase 02 plans
+Last session: 2026-08-22T07:24:18.268Z
+Stopped at: Completed Phase 04 public booking plans
 Resume file: None
