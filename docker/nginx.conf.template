@@ -16,6 +16,11 @@ http {
         '' close;
     }
 
+    map "${MAINTENANCE_MODE}" $maintenance_enabled {
+        default 0;
+        "true" 1;
+    }
+
     server {
         listen ${PORT};
         server_name _;
@@ -41,7 +46,14 @@ http {
         }
 
         location / {
+            if ($maintenance_enabled) { return 503; }
             try_files $uri $uri/ /index.html;
+        }
+
+        error_page 503 /maintenance.html;
+        location = /maintenance.html {
+            internal;
+            root /app/docker;
         }
     }
 }

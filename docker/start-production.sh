@@ -16,11 +16,12 @@ trap cleanup TERM INT EXIT
 
 : "${PORT:=10000}"
 : "${BACKEND_PATH:=/api}"
-export PORT BACKEND_PATH
+: "${MAINTENANCE_MODE:=false}"
+export PORT BACKEND_PATH MAINTENANCE_MODE
 
 python -c 'from takdora.config import get_settings; get_settings()'
 
-envsubst '$PORT' < /app/docker/nginx.conf.template > /tmp/nginx.conf
+envsubst '$PORT $MAINTENANCE_MODE' < /app/docker/nginx.conf.template > /tmp/nginx.conf
 uv run --no-sync reflex db migrate
 uv run --no-sync reflex export --env prod --frontend-only --no-zip
 uv run --no-sync reflex run --env prod --backend-only --backend-host 127.0.0.1 --backend-port 8000 &

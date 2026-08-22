@@ -26,10 +26,12 @@ solely because delivery failed: preserve the record and provide a safe retry.
 
 ## Planned maintenance
 
-Use Render maintenance mode for planned outages and direct the maintenance page
-to a business contact route. Before enabling it, announce the window and verify
-that owners can still receive an appropriate contact path. Disable it only after
-`/healthz` and the root page are verified.
+Set the protected Render environment value `MAINTENANCE_MODE=true`, deploy, and
+open the root page. Visitors receive Takdora's bounded maintenance page while
+`/healthz` continues to report application readiness for Render. The page never
+contains a bypass URL, configuration, or customer data. After the maintenance
+window, set `MAINTENANCE_MODE=false`, deploy, then verify both `/healthz` and the
+root page before announcing that service is restored.
 
 ## Backups and recovery
 
