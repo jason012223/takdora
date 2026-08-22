@@ -65,6 +65,14 @@ class Business(rx.Model, table=True):
     creating_owner_id: int = Field(foreign_key="owneraccount.id", index=True)
     name: str = Field(default="")
     slug: str = Field(default="", index=True)
+    contact_email: str = Field(default="")
+    contact_phone: str = Field(default="")
+    address: str = Field(default="")
+    timezone: str = Field(default="Asia/Manila")
+    currency: str = Field(default="PHP")
+    logo_url: str | None = Field(default=None)
+    accent_color: str | None = Field(default=None)
+    invoice_identity: str = Field(default="")
     is_active: bool = Field(default=True, index=True)
     deletion_requested_at: datetime | None = Field(default=None)
     purge_after: datetime | None = Field(default=None, index=True)
@@ -82,6 +90,16 @@ class BusinessMembership(rx.Model, table=True):
     business_id: int = Field(foreign_key="business.id", index=True)
     owner_id: int = Field(foreign_key="owneraccount.id", index=True)
     role: str = Field(default="owner")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class BusinessSlugRedirect(rx.Model, table=True):
+    """Durable prior public addresses to be resolved by the future public router."""
+
+    __table_args__ = (UniqueConstraint("slug", name="uq_business_slug_redirect"),)
+
+    business_id: int = Field(foreign_key="business.id", index=True)
+    slug: str = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

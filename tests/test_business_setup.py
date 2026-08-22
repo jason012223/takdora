@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from takdora.business_setup import BusinessProfileInput, default_branding, normalize_slug, validate_profile
+from takdora.business_setup import (
+    BusinessProfileInput,
+    default_branding,
+    normalize_slug,
+    validate_profile,
+)
 
 
 def test_philippines_first_profile_defaults_and_optional_branding() -> None:
