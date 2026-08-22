@@ -22,6 +22,9 @@ services:
       (uv run --no-sync reflex db makemigrations --message foundation || true) &&
       uv run --no-sync reflex db migrate &&
       uv run --no-sync reflex run --env dev --frontend-port 3000 --backend-port 8000"
+    # Docker creates named volumes as root. This development-only service needs
+    # write access while Reflex generates its frontend cache there.
+    user: "0:0"
     environment:
       APP_ENV: development
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-takdora}:${POSTGRES_PASSWORD:-takdora}@db:5432/${POSTGRES_DB:-takdora}
@@ -38,6 +41,11 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      # Reflex/Bun generates thousands of frontend files. Keep that cache in a
+      # Linux Docker volume rather than the Windows bind mount for dependable
+      # local startup performance.
+      - takdora-web:/app/.web
 
 volumes:
   takdora-postgres:
+  takdora-web:
