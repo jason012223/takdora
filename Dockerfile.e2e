@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/playwright/python:v1.58.0-noble
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir "uv==0.9.21" && uv sync --frozen --all-groups --no-install-project
+COPY . .
+CMD ["uv", "run", "pytest", "tests/e2e", "-q"]

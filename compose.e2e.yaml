@@ -1,0 +1,13 @@
+services:
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    environment:
+      TAKDORA_TEST_BASE_URL: http://app:3000
+      TAKDORA_TEST_HEALTH_URL: http://app:8000/healthz
+    depends_on:
+      app:
+        condition: service_started
+    volumes:
+      - .:/app

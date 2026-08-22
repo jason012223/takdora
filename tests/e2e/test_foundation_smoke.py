@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from playwright.sync_api import expect, sync_playwright
 
 
@@ -20,7 +22,9 @@ def test_readiness_control_and_healthz_work_against_compose(app_base_url: str) -
             expect(page.locator("#readiness-result")).to_contain_text(
                 "Database readiness confirmed"
             )
-            health = page.request.get("http://localhost:8000/healthz")
+            health = page.request.get(
+                os.getenv("TAKDORA_TEST_HEALTH_URL", "http://localhost:8000/healthz")
+            )
             assert health.status == 200
             assert health.json() == {"status": "ok"}
         finally:
