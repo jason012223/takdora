@@ -16,6 +16,7 @@ from takdora.availability import (
     replace_weekly_blocks,
     slots_for_owner_service,
     update_booking_rules,
+    update_weekly_block,
     weekly_blocks_for_owner,
 )
 from takdora.services import services_for_owner
@@ -34,6 +35,7 @@ class AvailabilityState(AuthState):
     horizon_days: str = "30"
     buffer_minutes: str = "0"
     selected_service_id: str = ""
+    drag_payload: str = ""
     schedule_message: str = ""
     timezone_label: str = ""
     blocks: list[dict[str, str]] = []
@@ -59,6 +61,9 @@ class AvailabilityState(AuthState):
         self.blocks = [
             {
                 "id": str(item.id or 0),
+                "weekday": str(item.weekday),
+                "start": item.start_time.strftime("%H:%M"),
+                "end": item.end_time.strftime("%H:%M"),
                 "day": ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")[item.weekday],
                 "time": f"{item.start_time.strftime('%H:%M')}–{item.end_time.strftime('%H:%M')}",
             }
@@ -67,7 +72,35 @@ class AvailabilityState(AuthState):
         self.services = [f"{item.id or 0}: {item.name}" for item in service_records]
         if not self.selected_service_id and self.services:
             self.selected_service_id = self.services[0]
-        return None
+        return rx.call_script(
+            """
+            document.querySelectorAll('[data-schedule-block]').forEach((block) => {
+              block.ondragstart = (event) => event.dataTransfer.setData('text/plain', [
+                block.dataset.scheduleBlock, block.dataset.weekday,
+                block.dataset.start, block.dataset.end
+              ].join('|'));
+            });
+            document.querySelectorAll('[data-schedule-drop]').forEach((target) => {
+              target.ondragover = (event) => event.preventDefault();
+              target.ondrop = (event) => {
+                event.preventDefault();
+                const parts = event.dataTransfer.getData('text/plain').split('|');
+                if (parts.length !== 4) return;
+                parts[1] = target.dataset.scheduleDrop;
+                const input = document.getElementById('schedule-drag-payload');
+                const submit = document.getElementById('schedule-drag-submit');
+                if (!input || !submit) return;
+                const descriptor = Object.getOwnPropertyDescriptor(
+                  HTMLInputElement.prototype, 'value'
+                );
+                const setter = descriptor.set;
+                setter.call(input, parts.join('|'));
+                input.dispatchEvent(new Event('input', {bubbles: true}));
+                submit.click();
+              };
+            });
+            """
+        )
 
     def add_block(self) -> None:
         try:
@@ -96,6 +129,20 @@ class AvailabilityState(AuthState):
             self.schedule_message = str(error)
             return
         self.schedule_message = "Working hours updated."
+        self.load_availability()
+
+    def apply_drag_payload(self) -> None:
+        try:
+            block_id, weekday, start_time, end_time = self.drag_payload.split("|", maxsplit=3)
+            update_weekly_block(
+                self.require_owner(),
+                int(block_id),
+                WeeklyBlockInput(weekday, start_time, end_time),
+            )
+        except (AuthenticationError, WorkspaceAccessError, ValueError) as error:
+            self.schedule_message = str(error)
+            return
+        self.schedule_message = "Working hours moved."
         self.load_availability()
 
     def save_booking_rules(self) -> None:
@@ -179,7 +226,30 @@ def availability_page() -> rx.Component:
                 class_name="availability-block",
                 draggable="true",
                 data_schedule_block=item["id"],
+                data_weekday=item["weekday"],
+                data_start=item["start"],
+                data_end=item["end"],
             ),
+        ),
+        rx.input(
+            id="schedule-drag-payload",
+            value=AvailabilityState.drag_payload,
+            on_change=AvailabilityState.set_drag_payload,
+            type="hidden",
+        ),
+        rx.button(
+            "Apply moved hours",
+            id="schedule-drag-submit",
+            on_click=AvailabilityState.apply_drag_payload,
+            display="none",
+        ),
+        rx.grid(
+            *[
+                rx.box(day, data_schedule_drop=str(index), class_name="schedule-drop-target")
+                for index, day in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+            ],
+            columns="7",
+            class_name="schedule-drop-grid",
         ),
         rx.details(
             rx.summary("Booking rules (optional)"),
