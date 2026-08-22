@@ -46,13 +46,13 @@ Plans:
 **Goal:** Public, owner, and marketing surfaces share an accessible, responsive, non-generic Takdora UI foundation built with Reflex and Radix components.
 **Requirements**: UI-01
 **Depends on:** Phase 1
-**Plans:** 3 plans
+**Plans:** 3/3 plans executed
 
 Plans:
 
-- [ ] 01.1-01-PLAN.md — Establish the Takdora theme, global styling, and rendered foundation shell.
-- [ ] 01.1-02-PLAN.md — Deliver reusable form, feedback, status, card, and table primitives with a component gallery.
-- [ ] 01.1-03-PLAN.md — Add responsive public/owner layouts, dialog/calendar primitives, and browser coverage.
+- [x] 01.1-01-PLAN.md — Establish the Takdora theme, global styling, and rendered foundation shell.
+- [x] 01.1-02-PLAN.md — Deliver reusable form, feedback, status, card, and table primitives with a component gallery.
+- [x] 01.1-03-PLAN.md — Add responsive public/owner layouts, dialog/calendar primitives, and browser coverage.
 
 ### Phase 2: Owner Workspaces and Business Setup
 
