@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 1
 current_phase_name: Deployable Foundation
 status: planning
-stopped_at: Completed Phase 04 public booking plans
-last_updated: "2026-08-22T07:24:18.305Z"
+stopped_at: Completed Phase 06 invoice lifecycle and manual payments
+last_updated: "2026-08-22T07:43:30.791Z"
 last_activity: 2026-08-22
 last_activity_desc: Created the MVP roadmap with full v1 requirement coverage.
-state_head: f517b35f4c4403a53d57b8c885354f42846da44d
+state_head: 05f7d1bcec65b21c3050f3ef5f6399cc990f4cda
 progress:
   total_phases: 9
   completed_phases: 0
-  total_plans: 18
-  completed_plans: 15
+  total_plans: 24
+  completed_plans: 21
   percent: 0
 ---
 
@@ -84,6 +84,8 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Phase 2: every workspace lookup is derived from the authenticated owner.
 - [Phase 1]: Public browser time zones are display preferences only; booking authority stays UTC and server-calculated.
 - [Phase 1]: A confirmed booking survives delayed confirmation email delivery through a durable outbox.
+- [Phase 1]: Phase 6: invoices remain BIR-aware configurable records and never claim BIR registration, compliance, electronic invoicing, or sales reporting.
+- [Phase 1]: Phase 6: invoices use owner-entered received totals and deliberate post-commit email delivery, never a payment provider or ledger.
 
 ### Pending Todos
 
@@ -109,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-22T07:24:18.268Z
-Stopped at: Completed Phase 04 public booking plans
+Last session: 2026-08-22T07:43:30.759Z
+Stopped at: Completed Phase 06 invoice lifecycle and manual payments
 Resume file: None

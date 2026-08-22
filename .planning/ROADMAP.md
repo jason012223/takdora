@@ -149,13 +149,14 @@ Plans:
   3. When issued, an invoice receives a unique number for that business and preserves the relevant business, customer, and line-item details as immutable snapshots.
   4. A business owner can download an issued invoice as an authorized private PDF, mark it paid or void, and distinguish outstanding from paid invoices; generated documents clearly avoid an automatic BIR-compliance claim.
 
-**Plans**: 3 plans
+**Plans**: 3/3 plans executed
 
 Plans:
 
-- [ ] 06-01-PLAN.md — Create completed-booking invoice drafts with exact editable totals.
-- [ ] 06-02-PLAN.md — Issue immutable numbered, branded private PDFs and correction flow.
-- [ ] 06-03-PLAN.md — Track received-total payments and intentional invoice email delivery.
+- [x] 06-01-PLAN.md — Create completed-booking invoice drafts with exact editable totals.
+- [x] 06-02-PLAN.md — Issue immutable numbered, branded private PDFs and correction flow.
+- [x] 06-03-PLAN.md — Track received-total payments and intentional invoice email delivery.
+
 **UI hint**: yes
 
 ### Phase 7: Reliability and Launch Hardening
@@ -205,6 +206,6 @@ Plans:
 | 3. Services and Availability | 0/TBD | Not started | - |
 | 4. Safe Public Booking | 3/3 | In Progress|  |
 | 5. Owner Booking Operations | 0/TBD | Not started | - |
-| 6. Invoice Lifecycle and Manual Payments | 0/TBD | Not started | - |
+| 6. Invoice Lifecycle and Manual Payments | 3/3 | In Progress|  |
 | 7. Reliability and Launch Hardening | 0/TBD | Not started | - |
 | 8. Portfolio Validation and Responsive Release | 0/TBD | Not started | - |

@@ -53,14 +53,14 @@
 
 ### Invoicing
 
-- [ ] **INV-01**: A business owner can create an invoice draft prefilled from a booking's customer and service details.
-- [ ] **INV-02**: A business owner can edit an invoice draft's line items, issue date, due date, notes, and displayed invoice fields before issuing it.
-- [ ] **INV-03**: Takdora calculates invoice totals using exact decimal money arithmetic and the business's configured currency.
-- [ ] **INV-04**: A business owner can issue an invoice with a unique business-specific number and immutable snapshots of relevant business, customer, and line-item data.
-- [ ] **INV-05**: A business owner can download an issued invoice as a PDF from the private dashboard.
-- [ ] **INV-06**: A business owner can mark an issued invoice as paid or void and see its current payment status.
-- [ ] **INV-07**: A business owner can view outstanding and paid invoices for their business.
-- [ ] **INV-08**: Takdora labels generated documents as configurable invoices and does not claim automatic BIR compliance.
+- [x] **INV-01**: A business owner can create an invoice draft prefilled from a booking's customer and service details.
+- [x] **INV-02**: A business owner can edit an invoice draft's line items, issue date, due date, notes, and displayed invoice fields before issuing it.
+- [x] **INV-03**: Takdora calculates invoice totals using exact decimal money arithmetic and the business's configured currency.
+- [x] **INV-04**: A business owner can issue an invoice with a unique business-specific number and immutable snapshots of relevant business, customer, and line-item data.
+- [x] **INV-05**: A business owner can download an issued invoice as a PDF from the private dashboard.
+- [x] **INV-06**: A business owner can mark an issued invoice as paid or void and see its current payment status.
+- [x] **INV-07**: A business owner can view outstanding and paid invoices for their business.
+- [x] **INV-08**: Takdora labels generated documents as configurable invoices and does not claim automatic BIR compliance.
 
 ### Reliability and Launch Readiness
 
@@ -135,14 +135,14 @@
 | OPS-02 | Phase 5 | Pending |
 | OPS-03 | Phase 5 | Pending |
 | OPS-04 | Phase 5 | Pending |
-| INV-01 | Phase 6 | Pending |
-| INV-02 | Phase 6 | Pending |
-| INV-03 | Phase 6 | Pending |
-| INV-04 | Phase 6 | Pending |
-| INV-05 | Phase 6 | Pending |
-| INV-06 | Phase 6 | Pending |
-| INV-07 | Phase 6 | Pending |
-| INV-08 | Phase 6 | Pending |
+| INV-01 | Phase 6 | Complete |
+| INV-02 | Phase 6 | Complete |
+| INV-03 | Phase 6 | Complete |
+| INV-04 | Phase 6 | Complete |
+| INV-05 | Phase 6 | Complete |
+| INV-06 | Phase 6 | Complete |
+| INV-07 | Phase 6 | Complete |
+| INV-08 | Phase 6 | Complete |
 | REL-01 | Phase 7 | Pending |
 | REL-02 | Phase 7 | Pending |
 | REL-03 | Phase 7 | Pending |
