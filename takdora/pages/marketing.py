@@ -12,6 +12,15 @@ DEMO_CTA = "Explore the demo"
 MANUAL_PAYMENT_BOUNDARY = "Payments are recorded manually in Takdora v1."
 INVOICE_BOUNDARY = "Invoices are BIR-aware templates, not BIR-compliant e-invoices."
 SYNTHETIC_DEMO_NOTICE = "The demo uses synthetic example records, not customer data."
+MARKETING_COPY = " ".join(
+    (
+        PRIMARY_CTA,
+        DEMO_CTA,
+        MANUAL_PAYMENT_BOUNDARY,
+        INVOICE_BOUNDARY,
+        SYNTHETIC_DEMO_NOTICE,
+    )
+)
 
 
 def _cta_row() -> rx.Component:
