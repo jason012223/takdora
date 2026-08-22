@@ -1,0 +1,1 @@
+"""Takdora page modules."""

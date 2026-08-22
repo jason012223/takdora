@@ -12,6 +12,7 @@ from starlette.routing import Route
 
 from takdora.config import get_settings
 from takdora.models import record_probe
+from takdora.pages.design_system import design_system
 from takdora.ui.shell import application_shell
 from takdora.ui.theme import TOKENS, takdora_theme
 
@@ -71,3 +72,4 @@ settings.initialize_sentry()
 health_api = Starlette(routes=[Route("/healthz", health_response, methods=["GET"])])
 app = rx.App(api_transformer=health_api, theme=takdora_theme, stylesheets=["/takdora.css"])
 app.add_page(index, route="/", title="Takdora")
+app.add_page(design_system, route="/design-system", title="Takdora interface patterns")
