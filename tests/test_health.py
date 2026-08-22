@@ -33,8 +33,11 @@ def test_sentry_is_opt_in_and_never_enables_default_pii_collection() -> None:
             "DATABASE_URL": "postgresql+psycopg://user:password@db/takdora",
             "API_URL": "https://takdora.example/api",
             "APP_SECRET_KEY": "test-secret",
-            "SENTRY_DSN": "https://public@example.ingest.sentry.io/1",
-            "APP_RELEASE": "test-release",
+                "SENTRY_DSN": "https://public@example.ingest.sentry.io/1",
+                "APP_RELEASE": "test-release",
+                "PUBLIC_APP_ORIGIN": "https://takdora.app",
+                "SMTP_HOST": "smtp.example.test",
+                "MAIL_FROM": "Takdora <no-reply@takdora.app>",
         }
     )
     with patch("sentry_sdk.init") as initialize:
