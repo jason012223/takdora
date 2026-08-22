@@ -171,7 +171,13 @@ Plans:
   3. Automated regression checks demonstrate that one business cannot access another's data and simultaneous booking attempts do not create an overlap.
   4. Before launch, an operator can verify migrations, static assets, health checks, backups, and production configuration through a repeatable release check.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+- [ ] 07-01-PLAN.md â€” Make delivery failures tenant-safe, visible, monitored, and retryable.
+- [ ] 07-02-PLAN.md â€” Persist private PDFs and logos in durable object storage with owner authorization.
+- [ ] 07-03-PLAN.md â€” Add maintenance, Windows-safe browser smoke, staging release gates, and recovery evidence.
 
 ### Phase 8: Portfolio Validation and Responsive Release
 
