@@ -1,0 +1,23 @@
+FROM python:3.13-slim
+
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/takdora-venv \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y curl unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir "uv==0.9.21" \
+    && useradd --create-home --uid 10001 appuser
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
+
+COPY --chown=appuser:appuser . .
+USER appuser
+
+EXPOSE 3000 8000
+CMD ["uv", "run", "reflex", "run", "--env", "dev", "--frontend-port", "3000", "--backend-port", "8000"]

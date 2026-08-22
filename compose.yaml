@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-takdora}
+      POSTGRES_USER: ${POSTGRES_USER:-takdora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-takdora}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - takdora-postgres:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: >-
+      sh -c "uv run --no-sync reflex db init &&
+      (uv run --no-sync reflex db makemigrations --message foundation || true) &&
+      uv run --no-sync reflex db migrate &&
+      uv run --no-sync reflex run --env dev --frontend-port 3000 --backend-port 8000"
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-takdora}:${POSTGRES_PASSWORD:-takdora}@db:5432/${POSTGRES_DB:-takdora}
+      API_URL: http://localhost:8000
+      REFLEX_FRONTEND_PORT: 3000
+      REFLEX_BACKEND_PORT: 8000
+      UV_PROJECT_ENVIRONMENT: /opt/takdora-venv
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    volumes:
+      - .:/app
+
+volumes:
+  takdora-postgres:
