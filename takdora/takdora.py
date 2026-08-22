@@ -18,6 +18,7 @@ from takdora.models import Invoice, InvoiceDocument, record_probe
 from takdora.pages.auth import register_page, request_reset_page, reset_password_page, sign_in_page
 from takdora.pages.availability import AvailabilityState, availability_page
 from takdora.pages.design_system import design_system
+from takdora.pages.demo import demo_page
 from takdora.pages.marketing import features_page, help_page, home_page, portfolio_page
 from takdora.pages.onboarding import onboarding_page
 from takdora.pages.owner_bookings import OwnerBookingsState, owner_bookings_page
@@ -136,6 +137,7 @@ app.add_page(home_page, route="/", title="Takdora | Booking and invoices")
 app.add_page(features_page, route="/features", title="Takdora features")
 app.add_page(help_page, route="/help", title="Takdora help")
 app.add_page(portfolio_page, route="/portfolio", title="Explore Takdora")
+app.add_page(demo_page, route="/demo", title="Takdora synthetic demo")
 app.add_page(design_system, route="/design-system", title="Takdora interface patterns")
 app.add_page(ui_preview, route="/ui-preview", title="Takdora responsive UI preview")
 app.add_page(register_page, route="/register", title="Create your Takdora account")

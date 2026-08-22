@@ -25,6 +25,7 @@ class OwnerAccount(rx.Model, table=True):
     password_digest: str
     password_salt: str
     email_verified_at: datetime | None = Field(default=None)
+    is_synthetic_demo: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -81,6 +82,7 @@ class Business(rx.Model, table=True):
     published_at: datetime | None = Field(default=None, index=True)
     deletion_requested_at: datetime | None = Field(default=None)
     purge_after: datetime | None = Field(default=None, index=True)
+    is_synthetic_demo: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

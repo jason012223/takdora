@@ -32,6 +32,7 @@ class Settings:
     object_storage_region: str | None
     maintenance_mode: bool
     maintenance_contact: str | None
+    synthetic_demo_enabled: bool
 
     @property
     def is_production(self) -> bool:
@@ -114,6 +115,7 @@ def get_settings(environ: dict[str, str] | None = None) -> Settings:
         object_storage_region=env.get("OBJECT_STORAGE_REGION"),
         maintenance_mode=env.get("MAINTENANCE_MODE", "false").casefold() == "true",
         maintenance_contact=env.get("MAINTENANCE_CONTACT"),
+        synthetic_demo_enabled=env.get("SYNTHETIC_DEMO_ENABLED", "false").casefold() == "true",
     )
     settings.validate()
     return settings

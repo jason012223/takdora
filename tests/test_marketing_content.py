@@ -16,7 +16,12 @@ def test_marketing_copy_does_not_contain_unsupported_evidence_categories() -> No
 
 
 def test_every_marketing_route_uses_the_reviewed_copy_boundary() -> None:
-    for page in (marketing.home_page, marketing.features_page, marketing.help_page, marketing.portfolio_page):
+    for page in (
+        marketing.home_page,
+        marketing.features_page,
+        marketing.help_page,
+        marketing.portfolio_page,
+    ):
         rendered = str(page()).casefold()
         assert '"/register"' in rendered
     assert "synthetic" in str(marketing.portfolio_page()).casefold()
