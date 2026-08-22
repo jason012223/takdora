@@ -10,6 +10,13 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import reflex as rx
 from sqlmodel import select
 
+from takdora.config import get_settings
+from takdora.documents import (
+    DocumentStorageError,
+    logo_storage_key,
+    remove_private_object,
+    store_private_bytes,
+)
 from takdora.models import Business, BusinessSlugRedirect, OwnerAccount
 from takdora.tenancy import WorkspaceAccessError, get_workspace_for_owner, require_owner
 
@@ -81,8 +88,8 @@ def validate_profile(profile: BusinessProfileInput) -> BusinessProfileInput:
         raise ValueError("Choose a valid IANA time zone.") from error
     if profile.currency != "PHP":
         raise ValueError("PHP is the supported currency for this Philippines-first release.")
-    if profile.logo_url and not profile.logo_url.startswith("https://"):
-        raise ValueError("Logo URL must use HTTPS.")
+    if profile.logo_url:
+        raise ValueError("Upload a logo file instead of linking an external image.")
     if profile.accent_color and not _COLOR_PATTERN.fullmatch(profile.accent_color):
         raise ValueError("Accent color must be a six-digit hex color.")
     return BusinessProfileInput(
@@ -169,6 +176,42 @@ def save_profile(owner: OwnerAccount | None, profile: BusinessProfileInput) -> B
         session.commit()
         session.refresh(stored)
         return stored
+
+
+def replace_logo(owner: OwnerAccount | None, content: bytes, content_type: str) -> Business:
+    """Replace branding only after the new private object write succeeds."""
+    authorized_owner = require_owner(owner)
+    business = get_workspace_for_owner(authorized_owner)
+    if business is None:
+        raise WorkspaceAccessError("Workspace not found.")
+    settings = get_settings()
+    try:
+        document = store_private_bytes(
+            settings,
+            business.id or 0,
+            content,
+            content_type,
+            key=logo_storage_key(business.id or 0, content_type),
+        )
+    except DocumentStorageError as error:
+        raise ValueError(
+            "Your logo could not be uploaded. Keep your existing branding and try again."
+        ) from error
+    with rx.session() as session:
+        stored = session.get(Business, business.id)
+        if stored is None or stored.creating_owner_id != authorized_owner.id:
+            raise WorkspaceAccessError("Workspace not found.")
+        previous_key = stored.logo_storage_key
+        stored.logo_storage_key = document.key
+        stored.logo_content_type = document.content_type
+        stored.logo_byte_size = document.byte_size
+        stored.logo_url = None
+        session.add(stored)
+        session.commit()
+        session.refresh(stored)
+    if previous_key:
+        remove_private_object(settings, key=previous_key)
+    return stored
 
 
 def change_business_slug(

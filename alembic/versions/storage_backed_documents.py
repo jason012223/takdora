@@ -23,6 +23,10 @@ def upgrade() -> None:
     op.create_unique_constraint(
         "uq_invoice_document_storage_key", "invoicedocument", ["storage_key"]
     )
+    op.add_column("business", sa.Column("logo_storage_key", sa.String(320), nullable=True))
+    op.add_column("business", sa.Column("logo_content_type", sa.String(80), nullable=True))
+    op.add_column("business", sa.Column("logo_byte_size", sa.Integer(), nullable=True))
+    op.create_unique_constraint("uq_business_logo_storage_key", "business", ["logo_storage_key"])
 
 
 def downgrade() -> None:
@@ -30,3 +34,7 @@ def downgrade() -> None:
     op.drop_column("invoicedocument", "checksum_sha256")
     op.drop_column("invoicedocument", "byte_size")
     op.drop_column("invoicedocument", "storage_key")
+    op.drop_constraint("uq_business_logo_storage_key", "business", type_="unique")
+    op.drop_column("business", "logo_byte_size")
+    op.drop_column("business", "logo_content_type")
+    op.drop_column("business", "logo_storage_key")

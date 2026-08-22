@@ -132,3 +132,17 @@ def read_private_bytes(settings: Settings, *, key: str, client: BaseClient | Non
         return response["Body"].read()
     except Exception as error:
         raise DocumentStorageError("Document not found.") from error
+
+
+def remove_private_object(
+    settings: Settings, *, key: str, client: BaseClient | None = None
+) -> None:
+    """Best-effort cleanup after a replacement reference has committed."""
+    if not key.startswith("businesses/"):
+        return
+    try:
+        (_client(settings) if client is None else client).delete_object(
+            Bucket=settings.object_storage_bucket, Key=key
+        )
+    except Exception:
+        return

@@ -69,3 +69,11 @@ def test_presigned_download_is_attachment_bound_and_short_lived() -> None:
         _settings(), key=invoice_storage_key(7), filename="INV-0001.pdf", client=FakeS3()
     )  # type: ignore[arg-type]
     assert url.startswith("https://")
+
+
+def test_logo_keys_are_private_and_business_scoped() -> None:
+    from takdora.documents import logo_storage_key
+
+    assert logo_storage_key(7, "image/png").startswith("businesses/7/logos/")
+    with pytest.raises(DocumentStorageError):
+        logo_storage_key(7, "image/svg+xml")
