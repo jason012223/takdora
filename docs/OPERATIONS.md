@@ -46,3 +46,20 @@ Before each production release, deploy the same image to a separate staging
 service with non-sensitive test data. Run the booking-to-invoice smoke flow,
 then merge only after the GitHub checks pass. Production receives deployments
 from `main` only; staging must never use production credentials or customer data.
+
+## Synthetic portfolio demo
+
+Enable `SYNTHETIC_DEMO_ENABLED=true` only in the isolated portfolio or staging
+environment. The `/demo` route creates and signs a reviewer into a labelled,
+resettable synthetic workspace. It uses only `takdora.example` contacts and does
+not dispatch customer email. Leave the setting unset or `false` in production.
+
+The demo is reset on entry. To reset it without opening the browser, run the
+following command inside the staging application container:
+
+```sh
+uv run python -c "from takdora.config import get_settings; from takdora.demo import reset_synthetic_demo; reset_synthetic_demo(get_settings())"
+```
+
+Verify `/demo` shows “Synthetic demo” before sharing it with a reviewer. Never
+use this command against a production database.

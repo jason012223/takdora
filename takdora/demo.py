@@ -12,13 +12,17 @@ from takdora.auth import create_password_digest, issue_session
 from takdora.config import Settings
 from takdora.models import (
     Booking,
+    BookingChangeOutbox,
+    BookingConfirmationOutbox,
     BookingRules,
     Business,
     BusinessMembership,
     BusinessService,
     Invoice,
     InvoiceDocument,
+    InvoiceEmailOutbox,
     InvoiceLine,
+    InvoiceTaxLine,
     OwnerAccount,
     WeeklyAvailabilityBlock,
 )
@@ -39,9 +43,6 @@ def _require_enabled(settings: Settings) -> None:
 
 def _delete_fixture_rows(session: rx.Model, business_id: int) -> None:
     """Delete only rows selected through the synthetic business marker."""
-    bookings = session.exec(select(Booking).where(Booking.business_id == business_id)).all()
-    for booking in bookings:
-        session.delete(booking)
     invoices = session.exec(select(Invoice).where(Invoice.business_id == business_id)).all()
     for invoice in invoices:
         for line in session.exec(select(InvoiceLine).where(InvoiceLine.invoice_id == invoice.id)).all():
@@ -50,7 +51,20 @@ def _delete_fixture_rows(session: rx.Model, business_id: int) -> None:
             select(InvoiceDocument).where(InvoiceDocument.invoice_id == invoice.id)
         ).all():
             session.delete(document)
+        for tax in session.exec(
+            select(InvoiceTaxLine).where(InvoiceTaxLine.invoice_id == invoice.id)
+        ).all():
+            session.delete(tax)
+        for delivery in session.exec(
+            select(InvoiceEmailOutbox).where(InvoiceEmailOutbox.invoice_id == invoice.id)
+        ).all():
+            session.delete(delivery)
         session.delete(invoice)
+    for model in (BookingConfirmationOutbox, BookingChangeOutbox):
+        for record in session.exec(select(model).where(model.business_id == business_id)).all():
+            session.delete(record)
+    for booking in session.exec(select(Booking).where(Booking.business_id == business_id)).all():
+        session.delete(booking)
     for model in (WeeklyAvailabilityBlock, BookingRules, BusinessService, BusinessMembership):
         for record in session.exec(select(model).where(model.business_id == business_id)).all():
             session.delete(record)
