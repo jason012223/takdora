@@ -224,7 +224,7 @@ def availability_page() -> rx.Component:
                 justify="between",
                 width="100%",
                 class_name="availability-block",
-                draggable="true",
+                draggable=True,
                 data_schedule_block=item["id"],
                 data_weekday=item["weekday"],
                 data_start=item["start"],
@@ -251,8 +251,8 @@ def availability_page() -> rx.Component:
             columns="7",
             class_name="schedule-drop-grid",
         ),
-        rx.details(
-            rx.summary("Booking rules (optional)"),
+        rx.el.details(
+            rx.el.summary("Booking rules (optional)"),
             rx.vstack(
                 rx.select(
                     ["15", "30", "60"],

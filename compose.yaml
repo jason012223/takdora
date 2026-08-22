@@ -29,6 +29,7 @@ services:
       REFLEX_FRONTEND_PORT: 3000
       REFLEX_BACKEND_PORT: 8000
       UV_PROJECT_ENVIRONMENT: /opt/takdora-venv
+      SYNTHETIC_DEMO_ENABLED: ${SYNTHETIC_DEMO_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy

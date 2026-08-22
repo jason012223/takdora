@@ -179,7 +179,7 @@ def confirmation_dialog(title: str, description: str, confirm_label: str) -> rx.
     )
 
 
-def availability_calendar(slots: Sequence[tuple[str, str]]) -> rx.Component:
+def availability_calendar(slots: Sequence[tuple[str, str]] | rx.Var) -> rx.Component:
     """Privacy-safe availability projection: it deliberately excludes customer identity."""
     return rx.card(
         rx.vstack(
@@ -189,22 +189,23 @@ def availability_calendar(slots: Sequence[tuple[str, str]]) -> rx.Component:
                 size="2",
                 color=TOKENS["muted"],
             ),
-            *[
-                rx.hstack(
-                    rx.text(label),
-                    status_badge(
-                        status,
-                        tone="success"
-                        if status == "Available"
-                        else "warning"
-                        if status == "Blocked"
-                        else "neutral",
+            rx.foreach(
+                slots,
+                lambda slot: rx.hstack(
+                    rx.text(slot[0]),
+                    rx.cond(
+                        slot[1] == "Available",
+                        status_badge("Available", tone="success"),
+                        rx.cond(
+                            slot[1] == "Blocked",
+                            status_badge("Blocked", tone="warning"),
+                            status_badge("Booked", tone="neutral"),
+                        ),
                     ),
                     justify="between",
                     width="100%",
-                )
-                for label, status in slots
-            ],
+                ),
+            ),
             rx.text("No additional times are available.", size="2", color=TOKENS["muted"]),
             spacing="3",
             width="100%",

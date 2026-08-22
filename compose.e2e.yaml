@@ -6,6 +6,7 @@ services:
     environment:
       TAKDORA_TEST_BASE_URL: http://app:3000
       TAKDORA_TEST_HEALTH_URL: http://app:8000/healthz
+      UV_PROJECT_ENVIRONMENT: /opt/takdora-e2e-venv
     depends_on:
       app:
         condition: service_started

@@ -18,11 +18,20 @@ def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS btree_gist")
     op.execute(
         """
-        ALTER TABLE booking ADD CONSTRAINT booking_active_period_no_overlap
-        EXCLUDE USING gist (
-          business_id WITH =,
-          tstzrange(starts_at, ends_at, '[)') WITH &&
-        ) WHERE (status IN ('pending', 'scheduled', 'completed'))
+        DO $$
+        BEGIN
+          IF to_regclass('public.booking') IS NOT NULL
+             AND NOT EXISTS (
+               SELECT 1 FROM pg_constraint
+               WHERE conname = 'booking_active_period_no_overlap'
+             ) THEN
+            ALTER TABLE booking ADD CONSTRAINT booking_active_period_no_overlap
+            EXCLUDE USING gist (
+              business_id WITH =,
+              tsrange(starts_at, ends_at, '[)') WITH &&
+            ) WHERE (status IN ('pending', 'scheduled', 'completed'));
+          END IF;
+        END $$
         """
     )
 

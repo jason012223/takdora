@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/playwright/python:v1.58.0-noble
 
+ENV UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/takdora-e2e-venv \
+    PYTHONDONTWRITEBYTECODE=1
+
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN pip install --no-cache-dir "uv==0.9.21" && uv sync --frozen --all-groups --no-install-project

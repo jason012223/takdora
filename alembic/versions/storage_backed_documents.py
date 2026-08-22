@@ -6,8 +6,6 @@ Revises: invoice_payments_and_outbox
 
 from collections.abc import Sequence
 
-import sqlalchemy as sa
-
 from alembic import op
 
 revision: str = "storage_backed_documents"
@@ -17,16 +15,30 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("invoicedocument", sa.Column("storage_key", sa.String(320), nullable=True))
-    op.add_column("invoicedocument", sa.Column("byte_size", sa.Integer(), nullable=True))
-    op.add_column("invoicedocument", sa.Column("checksum_sha256", sa.String(64), nullable=True))
-    op.create_unique_constraint(
-        "uq_invoice_document_storage_key", "invoicedocument", ["storage_key"]
+    """Apply only when upgrading a legacy schema with these tables already present."""
+    op.execute(
+        """
+        DO $$
+        BEGIN
+          IF to_regclass('public.invoicedocument') IS NOT NULL THEN
+            ALTER TABLE invoicedocument ADD COLUMN IF NOT EXISTS storage_key VARCHAR(320);
+            ALTER TABLE invoicedocument ADD COLUMN IF NOT EXISTS byte_size INTEGER;
+            ALTER TABLE invoicedocument ADD COLUMN IF NOT EXISTS checksum_sha256 VARCHAR(64);
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_invoice_document_storage_key') THEN
+              ALTER TABLE invoicedocument ADD CONSTRAINT uq_invoice_document_storage_key UNIQUE (storage_key);
+            END IF;
+          END IF;
+          IF to_regclass('public.business') IS NOT NULL THEN
+            ALTER TABLE business ADD COLUMN IF NOT EXISTS logo_storage_key VARCHAR(320);
+            ALTER TABLE business ADD COLUMN IF NOT EXISTS logo_content_type VARCHAR(80);
+            ALTER TABLE business ADD COLUMN IF NOT EXISTS logo_byte_size INTEGER;
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_business_logo_storage_key') THEN
+              ALTER TABLE business ADD CONSTRAINT uq_business_logo_storage_key UNIQUE (logo_storage_key);
+            END IF;
+          END IF;
+        END $$
+        """
     )
-    op.add_column("business", sa.Column("logo_storage_key", sa.String(320), nullable=True))
-    op.add_column("business", sa.Column("logo_content_type", sa.String(80), nullable=True))
-    op.add_column("business", sa.Column("logo_byte_size", sa.Integer(), nullable=True))
-    op.create_unique_constraint("uq_business_logo_storage_key", "business", ["logo_storage_key"])
 
 
 def downgrade() -> None:
