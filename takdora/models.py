@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
 import reflex as rx
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Column, DateTime, UniqueConstraint
 from sqlmodel import Field
 
 
@@ -170,8 +170,8 @@ class Booking(rx.Model, table=True):
     customer_email: str
     customer_phone: str | None = Field(default=None)
     customer_note: str | None = Field(default=None)
-    starts_at: datetime
-    ends_at: datetime
+    starts_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    ends_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     business_timezone: str
     idempotency_key: str = Field(max_length=96)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

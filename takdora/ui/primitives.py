@@ -168,6 +168,9 @@ def confirmation_dialog(title: str, description: str, confirm_label: str) -> rx.
         rx.dialog.content(
             rx.dialog.title(title),
             rx.dialog.description(description),
+            rx.text(
+                "Customer details are never shown in this preview.", size="2", color=TOKENS["muted"]
+            ),
             rx.flex(
                 rx.dialog.close(rx.button("Cancel", variant="soft")),
                 rx.dialog.close(rx.button(confirm_label, color_scheme="red")),

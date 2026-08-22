@@ -16,8 +16,8 @@ from takdora.invoicing import (
     update_invoice_draft,
     void_and_redraft,
 )
-from takdora.tenancy import WorkspaceAccessError
 from takdora.pages.demo import synthetic_demo_banner
+from takdora.tenancy import WorkspaceAccessError
 from takdora.ui.layouts import owner_layout
 from takdora.ui.primitives import feedback, status_badge
 
@@ -199,7 +199,7 @@ def owner_invoices_page() -> rx.Component:
             ),
             width="100%",
             align="start",
-        )
+        ),
     )
 
 
@@ -363,5 +363,5 @@ def owner_invoice_detail_page() -> rx.Component:
             ),
             width="100%",
             align="start",
-        )
+        ),
     )

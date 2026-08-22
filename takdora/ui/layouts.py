@@ -14,10 +14,17 @@ def _navigation(label: str, links: list[tuple[str, str]], *, owner: bool = False
             brand_mark(),
             rx.hstack(
                 *[rx.link(text, href=href, size="2") for text, href in links],
-                display="flex",
+                display={"base": "none", "md": "flex"},
                 spacing="3",
                 flex_wrap="wrap",
                 justify="end",
+            ),
+            rx.menu.root(
+                rx.menu.trigger(rx.button("Menu", variant="soft", aria_label=f"{label} menu")),
+                rx.menu.content(
+                    *[rx.menu.item(rx.link(text, href=href, size="2")) for text, href in links]
+                ),
+                display={"base": "inline-flex", "md": "none"},
             ),
             justify="between",
             align="center",

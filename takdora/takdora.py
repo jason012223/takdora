@@ -17,8 +17,8 @@ from takdora.documents import DocumentStorageError, presigned_download
 from takdora.models import Invoice, InvoiceDocument, record_probe
 from takdora.pages.auth import register_page, request_reset_page, reset_password_page, sign_in_page
 from takdora.pages.availability import AvailabilityState, availability_page
-from takdora.pages.design_system import design_system
 from takdora.pages.demo import demo_page
+from takdora.pages.design_system import design_system
 from takdora.pages.marketing import features_page, help_page, home_page, portfolio_page
 from takdora.pages.onboarding import onboarding_page
 from takdora.pages.owner_bookings import OwnerBookingsState, owner_bookings_page

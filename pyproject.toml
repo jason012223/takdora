@@ -38,3 +38,8 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic revision SQL is intentionally readable as SQL; wrapping it would make
+# the migration harder to audit without affecting executable behavior.
+"alembic/versions/*.py" = ["E501"]

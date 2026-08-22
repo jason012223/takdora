@@ -45,7 +45,9 @@ def _delete_fixture_rows(session: rx.Model, business_id: int) -> None:
     """Delete only rows selected through the synthetic business marker."""
     invoices = session.exec(select(Invoice).where(Invoice.business_id == business_id)).all()
     for invoice in invoices:
-        for line in session.exec(select(InvoiceLine).where(InvoiceLine.invoice_id == invoice.id)).all():
+        for line in session.exec(
+            select(InvoiceLine).where(InvoiceLine.invoice_id == invoice.id)
+        ).all():
             session.delete(line)
         for document in session.exec(
             select(InvoiceDocument).where(InvoiceDocument.invoice_id == invoice.id)

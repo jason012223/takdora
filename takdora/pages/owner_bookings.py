@@ -322,5 +322,5 @@ def owner_bookings_page() -> rx.Component:
             ),
             align="start",
             width="100%",
-        )
+        ),
     )

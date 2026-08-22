@@ -28,7 +28,7 @@ def upgrade() -> None:
             ALTER TABLE booking ADD CONSTRAINT booking_active_period_no_overlap
             EXCLUDE USING gist (
               business_id WITH =,
-              tsrange(starts_at, ends_at, '[)') WITH &&
+              tstzrange(starts_at, ends_at, '[)') WITH &&
             ) WHERE (status IN ('pending', 'scheduled', 'completed'));
           END IF;
         END $$
